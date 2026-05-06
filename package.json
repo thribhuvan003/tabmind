@@ -1,0 +1,12 @@
+{
+  "name": "tabmind",
+  "private": true,
+  "workspaces": ["extension", "web"],
+  "scripts": {
+    "dev:ext": "npm -w extension run dev",
+    "dev:web": "npm -w web run dev",
+    "build:ext": "npm -w extension run build",
+    "build:web": "npm -w web run build",
+    "test": "npm -w extension run test"
+  }
+}

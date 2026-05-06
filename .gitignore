@@ -1,0 +1,14 @@
+node_modules/
+.output/
+.wxt/
+dist/
+.next/
+out/
+*.local
+.env
+.env.local
+
+# tooling
+.agents/
+.claude/
+skills-lock.json
