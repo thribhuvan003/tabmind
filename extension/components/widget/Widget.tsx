@@ -1,9 +1,17 @@
 import { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import "./widget.css";
 import { useWidgetStore } from "../../stores/widget.store";
-import type { ExtractedTodo, TabGroup } from "../../lib/types";
+import type { TabGroup, UserTask } from "../../lib/types";
 import { ensureFont } from "./theme";
 import { Mark } from "./Mark";
+import {
+  todayISO,
+  tomorrowISO,
+  nextMondayISO,
+  getTodayTasks,
+  getSomedayTasks,
+  getUpcomingTasks,
+} from "../../lib/tasks";
 
 const W_WIDTH = 360;
 
@@ -14,6 +22,8 @@ export function Widget() {
     session,
     note,
     loading,
+    tasks,
+    rolloverCount,
     setPosition,
     setMinimized,
     loadSession,
@@ -21,6 +31,11 @@ export function Widget() {
     saveNote,
     requestSnapshot,
     hydrate,
+    loadTasks,
+    addTask,
+    completeTask,
+    scheduleTask,
+    deleteTask,
   } = useWidgetStore();
 
   const posRef = useRef(position);
@@ -33,12 +48,16 @@ export function Widget() {
     ensureFont();
     hydrate();
     loadNote(window.location.href);
+
     const onMsg = (msg: { type?: string }) => {
       if (msg.type === "TABMIND_SESSION_UPDATED") loadSession();
+      if (msg.type === "TABMIND_TASKS_UPDATED") loadTasks();
     };
     chrome.runtime.onMessage.addListener(onMsg);
+
     const onResize = () => setPosition(posRef.current);
     window.addEventListener("resize", onResize);
+
     return () => {
       chrome.runtime.onMessage.removeListener(onMsg);
       window.removeEventListener("resize", onResize);
@@ -61,10 +80,7 @@ export function Widget() {
   const onPointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!dragging.current) return;
-      setPosition({
-        x: e.clientX - dragOffset.current.x,
-        y: e.clientY - dragOffset.current.y,
-      });
+      setPosition({ x: e.clientX - dragOffset.current.x, y: e.clientY - dragOffset.current.y });
     },
     [setPosition]
   );
@@ -75,7 +91,6 @@ export function Widget() {
   }, []);
 
   const minutes = session ? Math.max(1, Math.round(session.durationMs / 60_000)) : 0;
-  const todos = session?.todos ?? [];
   const groups = session?.groups ?? [];
   const noteText = note?.text ?? "";
 
@@ -88,9 +103,7 @@ export function Widget() {
         role="button"
         aria-label="Expand TabMind"
         tabIndex={0}
-        onKeyDown={(e) =>
-          (e.key === "Enter" || e.key === " ") && setMinimized(false)
-        }
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setMinimized(false)}
       >
         <Mark size={20} />
         {loading && <span className="tm-orb-pulse" />}
@@ -102,59 +115,57 @@ export function Widget() {
     <div
       className="tm-widget"
       data-dragging={isDragging || undefined}
-      style={{
-        position: "fixed",
-        left: position.x,
-        top: position.y,
-        width: W_WIDTH,
-        zIndex: 2147483647,
-      }}
+      style={{ position: "fixed", left: position.x, top: position.y, width: W_WIDTH, zIndex: 2147483647 }}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
       <div className="tm-glass">
+        {/* drag handle */}
         <div className="tm-grip" onPointerDown={onDragStart}>
-          <Header
-            onMinimize={() => setMinimized(true)}
-            onRefresh={requestSnapshot}
-            loading={loading}
-          />
+          <Header onMinimize={() => setMinimized(true)} onRefresh={requestSnapshot} loading={loading} />
         </div>
 
-        <SessionBlock
-          topic={session?.topic ?? null}
-          narrative={session?.narrative ?? null}
-          summary={session?.summary ?? null}
-          minutes={minutes}
-        />
+        <div className="tm-scroll">
+          {/* session block */}
+          <SessionBlock
+            topic={session?.topic ?? null}
+            narrative={session?.narrative ?? null}
+            summary={session?.summary ?? null}
+            minutes={minutes}
+          />
 
-        <Section label="Note for this page" hint={noteText ? "saved" : undefined}>
-          <NoteEditor value={noteText} onSave={saveNote} />
-        </Section>
-
-        {todos.length > 0 && (
-          <Section label={`Action items · ${todos.length}`}>
-            <TodoList items={todos} />
+          {/* per-page note */}
+          <Section label="Note for this page" hint={noteText ? "saved" : undefined}>
+            <NoteEditor value={noteText} onSave={saveNote} />
           </Section>
-        )}
 
-        {groups.length > 0 && (
-          <Section label={`Tab groups · ${groups.length}`}>
-            <GroupList groups={groups} />
-          </Section>
-        )}
+          {/* tasks — Tweek-style with rollover */}
+          <TaskPanel
+            tasks={tasks}
+            rolloverCount={rolloverCount}
+            onAdd={addTask}
+            onComplete={completeTask}
+            onSchedule={scheduleTask}
+            onDelete={deleteTask}
+          />
 
-        <Footer
-          continueHint={session?.continueHint ?? null}
-          onAsk={requestSnapshot}
-        />
+          {/* tab groups */}
+          {groups.length > 0 && (
+            <Section label={`Tab groups · ${groups.length}`}>
+              <GroupList groups={groups} />
+            </Section>
+          )}
+
+          {/* footer */}
+          <Footer continueHint={session?.continueHint ?? null} onAsk={requestSnapshot} />
+        </div>
       </div>
     </div>
   );
 }
 
-/* ─── subcomponents ─────────────────────────────────────── */
+/* ── header ─────────────────────────────────────────────── */
 
 function Header({
   onMinimize,
@@ -175,19 +186,8 @@ function Header({
       <div className="tm-controls" data-no-drag>
         <IconBtn onClick={onRefresh} title="Analyze now" spinning={loading}>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M2 8a6 6 0 1 0 1.5-4"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-            />
-            <path
-              d="M2 4v4h4"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <path d="M2 8a6 6 0 1 0 1.5-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            <path d="M2 4v4h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </IconBtn>
         <IconBtn onClick={onMinimize} title="Minimize">
@@ -200,6 +200,8 @@ function Header({
   );
 }
 
+/* ── session block ──────────────────────────────────────── */
+
 function SessionBlock({
   topic,
   narrative,
@@ -211,7 +213,6 @@ function SessionBlock({
   summary: string | null;
   minutes: number;
 }) {
-  const empty = !topic;
   return (
     <div className="tm-session">
       <div className="tm-meta">
@@ -222,9 +223,7 @@ function SessionBlock({
           </span>
         )}
       </div>
-      <div className="tm-topic">
-        {empty ? "Listening to your tabs…" : topic}
-      </div>
+      <div className="tm-topic">{topic ?? "Listening to your tabs…"}</div>
       {narrative ? (
         <p className="tm-narrative">{narrative}</p>
       ) : summary ? (
@@ -238,13 +237,9 @@ function SessionBlock({
   );
 }
 
-function NoteEditor({
-  value,
-  onSave,
-}: {
-  value: string;
-  onSave: (t: string) => void;
-}) {
+/* ── note editor ────────────────────────────────────────── */
+
+function NoteEditor({ value, onSave }: { value: string; onSave: (t: string) => void }) {
   const [text, setText] = useState(value);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const debRef = useRef<number | null>(null);
@@ -270,38 +265,252 @@ function NoteEditor({
         onChange={onChange}
         rows={2}
       />
-      {savedAt && (
-        <span key={savedAt} className="tm-saved">
-          Saved
-        </span>
+      {savedAt && <span key={savedAt} className="tm-saved">Saved</span>}
+    </div>
+  );
+}
+
+/* ── task panel (Tweek-style) ───────────────────────────── */
+
+const SCHEDULE_OPTIONS = [
+  { label: "Today", getDueDate: todayISO },
+  { label: "Tomorrow", getDueDate: tomorrowISO },
+  { label: "Next week", getDueDate: nextMondayISO },
+  { label: "Someday", getDueDate: () => "someday" },
+] as const;
+
+function TaskPanel({
+  tasks,
+  rolloverCount,
+  onAdd,
+  onComplete,
+  onSchedule,
+  onDelete,
+}: {
+  tasks: UserTask[];
+  rolloverCount: number;
+  onAdd: (text: string, dueDate?: string) => Promise<void>;
+  onComplete: (id: string) => Promise<void>;
+  onSchedule: (id: string, dueDate: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+}) {
+  const [newText, setNewText] = useState("");
+  const [showSomeday, setShowSomeday] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const todayTasks = getTodayTasks(tasks);
+  const somedayTasks = getSomedayTasks(tasks);
+  const upcomingTasks = getUpcomingTasks(tasks);
+
+  const handleAdd = async () => {
+    const text = newText.trim();
+    if (!text) return;
+    await onAdd(text, todayISO());
+    setNewText("");
+  };
+
+  const closeMenu = () => setOpenMenu(null);
+
+  return (
+    <div className="tm-section" data-no-drag>
+      <div className="tm-section-head">
+        <div className="tm-eyebrow-row">
+          <span className="tm-eyebrow">
+            Tasks
+            {todayTasks.length > 0 && <span className="tm-task-count">{todayTasks.length}</span>}
+          </span>
+          {rolloverCount > 0 && (
+            <span className="tm-rollover-badge" title={`${rolloverCount} task(s) moved from a previous day`}>
+              ↻ {rolloverCount} carried over
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Today's tasks */}
+      {todayTasks.length === 0 && somedayTasks.length === 0 && upcomingTasks.length === 0 ? (
+        <p className="tm-task-empty">AI will surface tasks from your tabs — or add one below.</p>
+      ) : (
+        <ul className="tm-tasks">
+          {todayTasks.map((task, i) => (
+            <TaskRow
+              key={task.id}
+              task={task}
+              index={i}
+              menuOpen={openMenu === task.id}
+              onToggleMenu={() => setOpenMenu(openMenu === task.id ? null : task.id)}
+              onComplete={() => { onComplete(task.id); closeMenu(); }}
+              onSchedule={(d) => { onSchedule(task.id, d); closeMenu(); }}
+              onDelete={() => { onDelete(task.id); closeMenu(); }}
+            />
+          ))}
+        </ul>
+      )}
+
+      {/* Quick add */}
+      <div className="tm-add-wrap">
+        <input
+          ref={inputRef}
+          className="tm-add-input"
+          placeholder="+ Add a task…"
+          value={newText}
+          onChange={(e) => setNewText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleAdd();
+            if (e.key === "Escape") setNewText("");
+          }}
+        />
+        {newText.trim() && (
+          <button className="tm-add-send" onClick={handleAdd} title="Add task (Enter)">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+              <path d="M8 2v12M2 8l6-6 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* Upcoming */}
+      {upcomingTasks.length > 0 && (
+        <div className="tm-upcoming">
+          {upcomingTasks.slice(0, 3).map((t) => (
+            <div key={t.id} className="tm-upcoming-item">
+              <span className="tm-upcoming-date">{formatShortDate(t.dueDate)}</span>
+              <span className="tm-upcoming-text">{t.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Someday */}
+      {somedayTasks.length > 0 && (
+        <>
+          <button
+            className="tm-someday-toggle"
+            onClick={() => setShowSomeday((v) => !v)}
+          >
+            <span>Someday</span>
+            <span className="tm-someday-count">{somedayTasks.length}</span>
+            <svg
+              className="tm-someday-arrow"
+              data-open={showSomeday || undefined}
+              width="10" height="10" viewBox="0 0 10 10" fill="none"
+            >
+              <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          {showSomeday && (
+            <ul className="tm-tasks tm-tasks--someday">
+              {somedayTasks.map((task, i) => (
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  index={i}
+                  menuOpen={openMenu === task.id}
+                  onToggleMenu={() => setOpenMenu(openMenu === task.id ? null : task.id)}
+                  onComplete={() => { onComplete(task.id); closeMenu(); }}
+                  onSchedule={(d) => { onSchedule(task.id, d); closeMenu(); }}
+                  onDelete={() => { onDelete(task.id); closeMenu(); }}
+                />
+              ))}
+            </ul>
+          )}
+        </>
       )}
     </div>
   );
 }
 
-function TodoList({ items }: { items: ExtractedTodo[] }) {
+function TaskRow({
+  task,
+  index,
+  menuOpen,
+  onToggleMenu,
+  onComplete,
+  onSchedule,
+  onDelete,
+}: {
+  task: UserTask;
+  index: number;
+  menuOpen: boolean;
+  onToggleMenu: () => void;
+  onComplete: () => void;
+  onSchedule: (dueDate: string) => void;
+  onDelete: () => void;
+}) {
   return (
-    <ul className="tm-todos" data-no-drag>
-      {items.slice(0, 5).map((t, i) => (
-        <li key={i} className="tm-todo">
-          <span className="tm-check" />
-          <span className="tm-todo-text">{t.text}</span>
-          {t.deadline && <DeadlineChip iso={t.deadline} />}
-        </li>
-      ))}
-    </ul>
+    <li
+      className="tm-task"
+      data-done={task.status === "done" || undefined}
+      style={{ "--i": index } as React.CSSProperties}
+    >
+      <button
+        className="tm-task-check"
+        onClick={onComplete}
+        aria-label={task.status === "done" ? "Mark incomplete" : "Mark complete"}
+        type="button"
+      >
+        {task.status === "done" && (
+          <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
+            <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
+      </button>
+
+      <span className="tm-task-text">{task.text}</span>
+
+      {task.rolledOverFrom && (
+        <span className="tm-task-rolled" title={`Carried over from ${task.rolledOverFrom}`}>↻</span>
+      )}
+
+      {task.isAiGenerated && task.status === "pending" && (
+        <span className="tm-task-ai" title="Extracted by AI">✦</span>
+      )}
+
+      <div className="tm-task-menu-wrap">
+        <button
+          className="tm-task-menu-btn"
+          onClick={onToggleMenu}
+          aria-label="Schedule task"
+          type="button"
+        >
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+            <circle cx="4" cy="8" r="1.3" fill="currentColor" />
+            <circle cx="8" cy="8" r="1.3" fill="currentColor" />
+            <circle cx="12" cy="8" r="1.3" fill="currentColor" />
+          </svg>
+        </button>
+
+        {menuOpen && (
+          <div className="tm-schedule-menu">
+            {SCHEDULE_OPTIONS.map(({ label, getDueDate }) => (
+              <button
+                key={label}
+                className="tm-schedule-item"
+                onClick={() => onSchedule(getDueDate())}
+                type="button"
+              >
+                <span className="tm-schedule-label">{label}</span>
+                <span className="tm-schedule-date">{getShortLabel(getDueDate())}</span>
+              </button>
+            ))}
+            <div className="tm-menu-sep" />
+            <button
+              className="tm-schedule-item tm-schedule-item--danger"
+              onClick={onDelete}
+              type="button"
+            >
+              Delete
+            </button>
+          </div>
+        )}
+      </div>
+    </li>
   );
 }
 
-function DeadlineChip({ iso }: { iso: string }) {
-  const label = useMemo(() => formatDeadline(iso), [iso]);
-  const tone = useMemo(() => deadlineTone(iso), [iso]);
-  return (
-    <span className={`tm-deadline tm-deadline-${tone}`} title={iso}>
-      {label}
-    </span>
-  );
-}
+/* ── groups ─────────────────────────────────────────────── */
 
 function GroupList({ groups }: { groups: TabGroup[] }) {
   const palette = ["#a78bfa", "#60a5fa", "#34d399", "#fbbf24", "#f472b6", "#fb923c"];
@@ -318,30 +527,23 @@ function GroupList({ groups }: { groups: TabGroup[] }) {
   );
 }
 
-function Footer({
-  continueHint,
-  onAsk,
-}: {
-  continueHint: string | null;
-  onAsk: () => void;
-}) {
+/* ── footer ─────────────────────────────────────────────── */
+
+function Footer({ continueHint, onAsk }: { continueHint: string | null; onAsk: () => void }) {
   return (
     <div className="tm-footer" data-no-drag>
       {continueHint && <p className="tm-continue">{continueHint}</p>}
       <div className="tm-actions">
-        <button className="tm-btn tm-btn-primary" onClick={onAsk}>
-          Refresh insight
-        </button>
-        <button
-          className="tm-btn tm-btn-ghost"
-          onClick={() => chrome.runtime.openOptionsPage?.()}
-        >
+        <button className="tm-btn tm-btn-primary" onClick={onAsk}>Refresh insight</button>
+        <button className="tm-btn tm-btn-ghost" onClick={() => chrome.runtime.openOptionsPage?.()}>
           Settings ↗
         </button>
       </div>
     </div>
   );
 }
+
+/* ── shared ─────────────────────────────────────────────── */
 
 function Section({
   label,
@@ -388,29 +590,25 @@ function IconBtn({
   );
 }
 
-/* ─── helpers ─────────────────────────────────────────── */
+/* ── helpers ─────────────────────────────────────────────── */
 
-function formatDeadline(iso: string): string {
+function formatShortDate(iso: string): string {
+  if (iso === "someday") return "Someday";
   const d = new Date(iso + "T00:00:00");
   if (isNaN(d.getTime())) return iso;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const target = new Date(d);
-  target.setHours(0, 0, 0, 0);
-  const days = Math.round((target.getTime() - today.getTime()) / 86_400_000);
-  if (days === 0) return "Today";
-  if (days === 1) return "Tomorrow";
-  if (days === -1) return "Yesterday";
-  if (days > 1 && days <= 6) return d.toLocaleDateString(undefined, { weekday: "short" });
+  const diff = Math.round((d.getTime() - today.getTime()) / 86_400_000);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  if (diff === -1) return "Yesterday";
+  if (diff > 1 && diff <= 6) return d.toLocaleDateString(undefined, { weekday: "short" });
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function deadlineTone(iso: string): "due" | "soon" | "later" {
-  const d = new Date(iso + "T00:00:00");
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const days = Math.round((d.getTime() - today.getTime()) / 86_400_000);
-  if (days <= 0) return "due";
-  if (days <= 3) return "soon";
-  return "later";
+function getShortLabel(dueDate: string): string {
+  if (dueDate === "someday") return "";
+  const d = new Date(dueDate + "T00:00:00");
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }

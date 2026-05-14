@@ -12,6 +12,8 @@ const AREA: Record<Key, "sync" | "local"> = {
   "tabmind:notes": "sync",
   "tabmind:session:latest": "local",
   "tabmind:session:history": "local",
+  "tabmind:tasks": "local",
+  "tabmind:tasks:rollover": "local",
   "tabmind:widget:position": "local",
   "tabmind:widget:minimized": "local",
   "tabmind:session:startedAt": "local",

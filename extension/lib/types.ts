@@ -39,10 +39,29 @@ export interface UrlNote {
   updatedAt: number;
 }
 
+export type TaskStatus = "pending" | "done";
+
+export interface UserTask {
+  id: string;
+  text: string;
+  /** "YYYY-MM-DD" for a specific date, or "someday" */
+  dueDate: string;
+  status: TaskStatus;
+  /** URL the task came from (if AI-extracted) */
+  source?: string;
+  isAiGenerated: boolean;
+  createdAt: number;
+  completedAt?: number;
+  /** Previous dueDate if this task was rolled over from a past day */
+  rolledOverFrom?: string;
+}
+
 export interface StorageSchema {
   "tabmind:session:latest": SessionSnapshot | null;
   "tabmind:session:history": SessionSnapshot[];
   "tabmind:notes": Record<string, UrlNote>;
+  "tabmind:tasks": UserTask[];
+  "tabmind:tasks:rollover": string;
   "tabmind:widget:position": { x: number; y: number } | null;
   "tabmind:widget:minimized": boolean;
   "tabmind:gemini:apiKey": string;

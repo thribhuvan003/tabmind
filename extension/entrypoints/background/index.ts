@@ -1,21 +1,21 @@
-﻿import { runSessionSnapshot } from "../../lib/session-engine";
+import { runSessionSnapshot } from "../../lib/session-engine";
 import { storageSet, storageGet, getLatestSession } from "../../lib/storage";
 import { applyTabGroups } from "../../lib/tab-groups";
+import { rolloverOverdueTasks, mergeAiTodos, msUntilMidnight } from "../../lib/tasks";
 
-const ALARM = "tabmind:snapshot";
-const IDLE_RESET_MIN = 5; // minutes idle → start a new session
+const ALARM_SNAPSHOT = "tabmind:snapshot";
+const ALARM_ROLLOVER = "tabmind:daily-rollover";
+const IDLE_RESET_MIN = 5;
 
-/** Push the freshest snapshot to every open widget so they refresh silently. */
-async function broadcastSessionUpdate() {
+/** Push the freshest snapshot + task update to every open widget. */
+async function broadcastToAll(type: string) {
   try {
     const tabs = await chrome.tabs.query({});
     for (const t of tabs) {
       if (!t.id) continue;
-      chrome.tabs.sendMessage(t.id, { type: "TABMIND_SESSION_UPDATED" }).catch(() => {});
+      chrome.tabs.sendMessage(t.id, { type }).catch(() => {});
     }
-  } catch {
-    /* no tabs queried — fine */
-  }
+  } catch { /* no tabs — fine */ }
 }
 
 async function snapshotPipeline() {
@@ -23,12 +23,32 @@ async function snapshotPipeline() {
     const snap = await runSessionSnapshot();
     if (!snap) return null;
     await applyTabGroups(snap.groups);
-    await broadcastSessionUpdate();
+    // Merge AI todos into the persistent task list.
+    if (snap.todos?.length) await mergeAiTodos(snap.todos);
+    await broadcastToAll("TABMIND_SESSION_UPDATED");
     return snap;
   } catch (err) {
     console.error("[TabMind] snapshot error:", err);
     return null;
   }
+}
+
+async function doRollover() {
+  try {
+    const count = await rolloverOverdueTasks();
+    if (count > 0) await broadcastToAll("TABMIND_TASKS_UPDATED");
+  } catch (err) {
+    console.error("[TabMind] rollover error:", err);
+  }
+}
+
+function scheduleRolloverAlarm() {
+  // Fire at next midnight, repeat every 24 h.
+  const delayMs = msUntilMidnight();
+  chrome.alarms.create(ALARM_ROLLOVER, {
+    when: Date.now() + delayMs,
+    periodInMinutes: 24 * 60,
+  });
 }
 
 async function ensureSessionStart() {
@@ -39,46 +59,44 @@ async function ensureSessionStart() {
 export default defineBackground(() => {
   chrome.runtime.onInstalled.addListener(async () => {
     await storageSet("tabmind:session:startedAt", Date.now());
-    chrome.alarms.create(ALARM, { periodInMinutes: 1.5 });
-    // Best-effort idle detection — extension may not have permission on all builds.
-    try {
-      chrome.idle?.setDetectionInterval?.(IDLE_RESET_MIN * 60);
-    } catch {
-      /* ignore */
-    }
+    chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: 1.5 });
+    scheduleRolloverAlarm();
+    try { chrome.idle?.setDetectionInterval?.(IDLE_RESET_MIN * 60); } catch { /* ignore */ }
   });
 
   chrome.runtime.onStartup.addListener(async () => {
-    // New browser launch = fresh session and a hello-back notification.
     await storageSet("tabmind:session:startedAt", Date.now());
     await storageSet("tabmind:lastResumeAt", Date.now());
-    chrome.alarms.create(ALARM, { periodInMinutes: 1.5 });
+    chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: 1.5 });
+    scheduleRolloverAlarm();
+    // Check for rollover tasks on browser start (handles overnight).
+    await doRollover();
     snapshotPipeline();
   });
 
   chrome.alarms.onAlarm.addListener(async (alarm) => {
-    if (alarm.name !== ALARM) return;
-    await ensureSessionStart();
-    snapshotPipeline();
+    if (alarm.name === ALARM_SNAPSHOT) {
+      await ensureSessionStart();
+      snapshotPipeline();
+    } else if (alarm.name === ALARM_ROLLOVER) {
+      await doRollover();
+    }
   });
 
-  // Idle reset: 5+ min idle → next "active" event starts a new session.
+  // Idle reset: 5+ min idle → next "active" event starts a fresh session.
   try {
     chrome.idle?.onStateChanged?.addListener(async (state) => {
       if (state === "active") {
         const last = (await storageGet("tabmind:lastResumeAt")) ?? 0;
-        const idleMs = Date.now() - last;
-        if (idleMs > IDLE_RESET_MIN * 60_000) {
+        if (Date.now() - last > IDLE_RESET_MIN * 60_000) {
           await storageSet("tabmind:session:startedAt", Date.now());
         }
         await storageSet("tabmind:lastResumeAt", Date.now());
       }
     });
-  } catch {
-    /* idle perm not granted — silent fallback */
-  }
+  } catch { /* idle perm not granted */ }
 
-  // ⌘⇧K — toggle widget on the active tab.
+  // ⌘⇧K / Ctrl+Shift+K — toggle widget on active tab.
   try {
     chrome.commands?.onCommand.addListener((command) => {
       if (command !== "tabmind-toggle") return;
@@ -87,9 +105,7 @@ export default defineBackground(() => {
         if (id != null) chrome.tabs.sendMessage(id, { type: "TABMIND_TOGGLE_WIDGET" }).catch(() => {});
       });
     });
-  } catch {
-    /* commands API unavailable */
-  }
+  } catch { /* commands API unavailable */ }
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg?.type === "TABMIND_SNAPSHOT_NOW") {
@@ -103,9 +119,7 @@ export default defineBackground(() => {
     if (msg?.type === "TABMIND_OPEN_WIDGET_ACTIVE") {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const id = tabs[0]?.id;
-        if (id != null) {
-          chrome.tabs.sendMessage(id, { type: "TABMIND_OPEN_WIDGET" }).catch(() => {});
-        }
+        if (id != null) chrome.tabs.sendMessage(id, { type: "TABMIND_OPEN_WIDGET" }).catch(() => {});
         sendResponse({ ok: id != null });
       });
       return true;
