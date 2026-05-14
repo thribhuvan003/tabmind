@@ -1,4 +1,4 @@
-﻿import type { StorageSchema, AiProvider } from "./types";
+﻿import type { StorageSchema, AiProvider, GlobalNote } from "./types";
 import { DEFAULT_BLOCKLIST } from "./types";
 
 type Key = keyof StorageSchema;
@@ -18,6 +18,7 @@ const AREA: Record<Key, "sync" | "local"> = {
   "tabmind:widget:minimized": "local",
   "tabmind:session:startedAt": "local",
   "tabmind:lastResumeAt": "local",
+  "tabmind:notes:global": "local",
 };
 
 function area(key: Key): chrome.storage.StorageArea {
@@ -97,6 +98,40 @@ export async function getBlocklist(): Promise<string[]> {
 export async function setBlocklist(list: string[]): Promise<void> {
   const cleaned = Array.from(new Set(list.map((s) => s.trim().toLowerCase()).filter(Boolean)));
   await storageSet("tabmind:blocklist", cleaned);
+}
+
+/* ─── global notes ─────────────────────────────────────────── */
+
+const GLOBAL_NOTES_CAP = 100;
+
+export async function getGlobalNotes(): Promise<GlobalNote[]> {
+  return (await storageGet("tabmind:notes:global")) ?? [];
+}
+
+export async function addGlobalNote(text: string): Promise<GlobalNote> {
+  const note: GlobalNote = {
+    id: crypto.randomUUID(),
+    text: text.trim(),
+    createdAt: Date.now(),
+    pinned: false,
+  };
+  const notes = await getGlobalNotes();
+  const updated = [note, ...notes].slice(0, GLOBAL_NOTES_CAP);
+  await storageSet("tabmind:notes:global", updated);
+  return note;
+}
+
+export async function deleteGlobalNote(id: string): Promise<void> {
+  const notes = await getGlobalNotes();
+  await storageSet("tabmind:notes:global", notes.filter((n) => n.id !== id));
+}
+
+export async function pinGlobalNote(id: string, pinned: boolean): Promise<void> {
+  const notes = await getGlobalNotes();
+  await storageSet(
+    "tabmind:notes:global",
+    notes.map((n) => (n.id === id ? { ...n, pinned } : n)),
+  );
 }
 
 export function isBlocked(url: string, blocklist: string[]): boolean {

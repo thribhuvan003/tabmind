@@ -39,6 +39,13 @@ export interface UrlNote {
   updatedAt: number;
 }
 
+export interface GlobalNote {
+  id: string;
+  text: string;
+  createdAt: number;
+  pinned: boolean;
+}
+
 export type TaskStatus = "pending" | "done";
 
 export interface UserTask {
@@ -70,6 +77,7 @@ export interface StorageSchema {
   "tabmind:blocklist": string[];
   "tabmind:session:startedAt": number;
   "tabmind:lastResumeAt": number;
+  "tabmind:notes:global": GlobalNote[];
 }
 
 export const DEFAULT_BLOCKLIST = [

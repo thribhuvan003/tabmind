@@ -31,14 +31,14 @@ Return ONLY valid minified JSON matching this exact schema. No prose. No code fe
 {
   "topic": "2-4 word label for the user's primary focus",
   "summary": "single sentence, present tense, naming the concrete task",
-  "narrative": "2-3 sentences in Superhuman voice. Reference specific tabs, time spent, and what they've tried. Sound like a colleague who's been watching. Never start with 'You are' or 'The user'.",
+  "narrative": "2-3 punchy sentences in Superhuman voice. ALWAYS lead with a concrete observation using this pattern: 'You've been [specific activity] for [N] minutes — [X] [Site A] tabs, [Y] [Site B] tabs, [Z] [Site C] tabs.' Then name what's been tried and what's still open. Never use hedges like 'seems like' or 'it looks like'. Never start with 'You are', 'The user', or 'I'.",
   "todos": [
     { "text": "concrete action item under 80 chars", "deadline": "YYYY-MM-DD or null", "source": "exact url it came from" }
   ],
   "groups": [
     { "label": "2-3 word group name", "tabIds": [<numeric tab ids from input>] }
   ],
-  "continueHint": "one sentence telling them how to resume this work tomorrow"
+  "continueHint": "One specific, actionable sentence naming the exact tab title or URL to return to first. No generic advice like 'pick up where you left off'."
 }
 
 RULES

@@ -511,3 +511,122 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── no-api-key empty state ──────────────────────────────── */
+.tm-no-key {
+  padding: 24px 18px 20px;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  border-bottom: 1px solid var(--c-border);
+}
+.tm-no-key-icon {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--c-accent-glow);
+  border: 1px solid var(--c-accent-line);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--c-accent);
+  margin-bottom: 12px;
+}
+.tm-no-key-title {
+  font-size: 13.5px; font-weight: 640; letter-spacing: -0.02em;
+  color: var(--c-text); margin-bottom: 6px;
+}
+.tm-no-key-body {
+  font-size: 12px; line-height: 1.6; color: var(--c-text-muted);
+  letter-spacing: -0.004em; max-width: 260px; margin: 0 0 4px;
+}
+
+/* ── orb badge ───────────────────────────────────────────── */
+.tm-orb-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  min-width: 16px; height: 16px;
+  padding: 0 4px;
+  background: var(--c-accent);
+  border: 1.5px solid rgba(0, 0, 0, 0.6);
+  border-radius: var(--r-pill);
+  font-size: 9px; font-weight: 700;
+  color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  pointer-events: none;
+  animation: tm-rise 240ms var(--ease-expo) both;
+}
+
+/* ── collapsible section arrow ───────────────────────────── */
+.tm-section-arrow {
+  transition: transform 200ms var(--ease-expo);
+  color: var(--c-text-trace);
+  flex-shrink: 0;
+}
+.tm-section-arrow[data-open] { transform: rotate(180deg); }
+
+/* ── quick notes (Noto-inspired) ─────────────────────────── */
+.tm-qn-input-wrap { margin-bottom: 10px; }
+
+.tm-qn-input {
+  width: 100%; background: transparent; border: none;
+  font-family: var(--font); font-size: 12.5px; color: var(--c-text-dim);
+  padding: 4px 2px; outline: none; letter-spacing: -0.005em;
+  border-bottom: 1px solid transparent;
+  transition: border-color 160ms var(--ease-quart), color 160ms var(--ease-quart);
+}
+.tm-qn-input::placeholder { color: var(--c-text-trace); }
+.tm-qn-input:focus {
+  border-bottom-color: var(--c-accent-line);
+  color: var(--c-text);
+}
+
+.tm-qn-list {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 3px;
+}
+
+.tm-qn-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 7px 9px; border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.022);
+  border: 1px solid var(--c-border);
+  font-size: 12px; line-height: 1.45;
+  transition: background 120ms var(--ease-quart);
+  animation: tm-rise 240ms var(--ease-expo) both;
+}
+.tm-qn-item:hover { background: rgba(255, 255, 255, 0.038); }
+.tm-qn-item[data-pinned] {
+  border-left: 2px solid var(--c-accent-line);
+  background: rgba(167, 139, 250, 0.05);
+}
+
+.tm-qn-body { flex: 1; min-width: 0; }
+.tm-qn-text {
+  color: var(--c-text-dim); letter-spacing: -0.005em;
+  word-break: break-word;
+}
+.tm-qn-item[data-pinned] .tm-qn-text { color: var(--c-text); }
+
+.tm-qn-time {
+  font-family: var(--mono); font-size: 9.5px;
+  color: var(--c-text-trace); margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tm-qn-actions {
+  display: flex; gap: 2px; flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 120ms var(--ease-quart);
+}
+.tm-qn-item:hover .tm-qn-actions { opacity: 1; }
+
+.tm-qn-btn {
+  width: 22px; height: 22px; border-radius: var(--r-sm);
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--c-text-trace);
+  transition: background 90ms var(--ease-quart), color 90ms var(--ease-quart);
+}
+.tm-qn-btn:hover { background: rgba(255, 255, 255, 0.055); color: var(--c-text-dim); }
+.tm-qn-btn[data-active] { color: var(--c-accent); opacity: 1; }
+.tm-qn-btn--delete:hover { background: rgba(248, 113, 113, 0.1); color: var(--c-danger); }
+.tm-qn-btn:focus-visible { outline: 2px solid var(--c-accent-line); outline-offset: 1px; }

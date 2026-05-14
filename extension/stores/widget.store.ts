@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { SessionSnapshot, UrlNote, UserTask } from "../lib/types";
+import type { SessionSnapshot, UrlNote, UserTask, GlobalNote } from "../lib/types";
 import {
   getLatestSession,
   getNote,
@@ -7,6 +7,11 @@ import {
   normalizeUrl,
   storageGet,
   storageSet,
+  getActiveApiKey,
+  getGlobalNotes,
+  addGlobalNote as dbAddGlobalNote,
+  deleteGlobalNote as dbDeleteGlobalNote,
+  pinGlobalNote as dbPinGlobalNote,
 } from "../lib/storage";
 import {
   getTasks,
@@ -14,8 +19,6 @@ import {
   updateTask,
   deleteTask as dbDeleteTask,
   completeTask as dbCompleteTask,
-  getTodayTasks,
-  getSomedayTasks,
   getRolloverCount,
   todayISO,
 } from "../lib/tasks";
@@ -26,18 +29,16 @@ interface WidgetState {
   position: { x: number; y: number };
   hydrated: boolean;
   loading: boolean;
-
   /* session */
   session: SessionSnapshot | null;
-
+  hasApiKey: boolean;
   /* notes */
   note: UrlNote | null;
   currentUrl: string;
-
+  globalNotes: GlobalNote[];
   /* tasks */
   tasks: UserTask[];
   rolloverCount: number;
-
   /* actions */
   setMinimized: (v: boolean) => void;
   setPosition: (pos: { x: number; y: number }) => void;
@@ -51,6 +52,9 @@ interface WidgetState {
   completeTask: (id: string) => Promise<void>;
   scheduleTask: (id: string, dueDate: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
+  addGlobalNote: (text: string) => Promise<void>;
+  deleteGlobalNote: (id: string) => Promise<void>;
+  pinGlobalNote: (id: string, pinned: boolean) => Promise<void>;
 }
 
 const DEFAULT_POS = () => ({
@@ -72,8 +76,10 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
   hydrated: false,
   loading: false,
   session: null,
+  hasApiKey: false,
   note: null,
   currentUrl: typeof window !== "undefined" ? window.location.href : "",
+  globalNotes: [],
   tasks: [],
   rolloverCount: 0,
 
@@ -112,8 +118,9 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
       const result: SessionSnapshot | null = await chrome.runtime.sendMessage({
         type: "TABMIND_SNAPSHOT_NOW",
       });
-      if (result) set({ session: result });
-      // Re-load tasks after snapshot (AI may have merged new todos).
+      if (result) {
+        set({ session: result, hasApiKey: true });
+      }
       await get().loadTasks();
     } catch { /* extension context may not be ready */ }
     finally { set({ loading: false }); }
@@ -121,18 +128,22 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
 
   hydrate: async () => {
     if (get().hydrated) return;
-    const [pos, min, session, tasks] = await Promise.all([
+    const [pos, min, session, tasks, { key }, globalNotes] = await Promise.all([
       storageGet("tabmind:widget:position"),
       storageGet("tabmind:widget:minimized"),
       getLatestSession(),
       getTasks(),
+      getActiveApiKey(),
+      getGlobalNotes(),
     ]);
     set({
       position: pos ? clampToViewport(pos) : DEFAULT_POS(),
       minimized: Boolean(min),
       session,
+      hasApiKey: !!key,
       tasks,
       rolloverCount: getRolloverCount(tasks),
+      globalNotes,
       hydrated: true,
     });
   },
@@ -165,5 +176,23 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
   deleteTask: async (id) => {
     await dbDeleteTask(id);
     await get().loadTasks();
+  },
+
+  addGlobalNote: async (text) => {
+    await dbAddGlobalNote(text);
+    const globalNotes = await getGlobalNotes();
+    set({ globalNotes });
+  },
+
+  deleteGlobalNote: async (id) => {
+    await dbDeleteGlobalNote(id);
+    const globalNotes = await getGlobalNotes();
+    set({ globalNotes });
+  },
+
+  pinGlobalNote: async (id, pinned) => {
+    await dbPinGlobalNote(id, pinned);
+    const globalNotes = await getGlobalNotes();
+    set({ globalNotes });
   },
 }));
