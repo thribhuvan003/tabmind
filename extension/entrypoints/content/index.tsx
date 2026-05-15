@@ -5,17 +5,47 @@ import { initSentry } from "../../lib/sentry";
 
 initSentry("content");
 
-const MAX_EXCERPT = 2000;
+const MAX_EXCERPT = 4000;
 
-/** Pull a clean text excerpt from the page, preferring main/article over chrome. */
+/** Strip noisy elements from a cloned subtree and return clean text. */
+function extractText(root: HTMLElement): string {
+  const clone = root.cloneNode(true) as HTMLElement;
+  // Remove chrome noise
+  clone.querySelectorAll(
+    "nav,header,footer,aside,script,style,noscript,svg,iframe," +
+    "[role='navigation'],[role='banner'],[role='complementary']," +
+    ".sidebar,.nav,.header,.footer,.cookie,.ad,.advertisement,.popup"
+  ).forEach((el) => el.remove());
+  return (clone.textContent ?? "").replace(/\s+/g, " ").trim();
+}
+
+/** Pull a clean text excerpt — reads the richest content available on the page. */
 function getPageExcerpt(): string {
-  const root =
-    document.querySelector("main") ||
-    document.querySelector("article") ||
-    document.body;
-  if (!root) return "";
-  const text = (root as HTMLElement).innerText || "";
-  return text.replace(/\s+/g, " ").trim().slice(0, MAX_EXCERPT);
+  // Priority selector list: most specific → most generic
+  const candidates = [
+    "[role='main']",
+    "main",
+    "article",
+    ".markdown-body",     // GitHub README / PR / wiki
+    ".js-discussion",     // GitHub issue comments
+    ".answer",            // Stack Overflow top answer
+    ".question-body",     // Stack Overflow question
+    ".s-prose",           // Stack Overflow prose
+    "[itemprop='articleBody']",
+    "#readme",
+    "#content",
+    ".content",
+    ".post-content",
+    ".entry-content",
+  ];
+  for (const sel of candidates) {
+    const el = document.querySelector(sel) as HTMLElement | null;
+    if (el) {
+      const text = extractText(el);
+      if (text.length > 300) return text.slice(0, MAX_EXCERPT);
+    }
+  }
+  return extractText(document.body).slice(0, MAX_EXCERPT);
 }
 
 /** Watch SPA route changes so per-URL notes reload on pushState/replaceState. */
@@ -83,6 +113,8 @@ export default defineContentScript({
     // Re-detect API key when user saves it in Settings (storage change from options page).
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area === "sync" && (
+        changes["tabmind:grok:apiKey"] ||
+        changes["tabmind:claude:apiKey"] ||
         changes["tabmind:gemini:apiKey"] ||
         changes["tabmind:openai:apiKey"] ||
         changes["tabmind:provider"]

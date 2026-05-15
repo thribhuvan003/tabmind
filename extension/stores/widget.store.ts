@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { SessionSnapshot, UrlNote, UserTask, GlobalNote } from "../lib/types";
+import type { SessionSnapshot, UrlNote, UserTask, GlobalNote, Goal, TaskCategory } from "../lib/types";
 import {
   getLatestSession,
   getNote,
@@ -12,6 +12,10 @@ import {
   addGlobalNote as dbAddGlobalNote,
   deleteGlobalNote as dbDeleteGlobalNote,
   pinGlobalNote as dbPinGlobalNote,
+  getGoals,
+  addGoal as dbAddGoal,
+  updateGoal,
+  deleteGoal as dbDeleteGoal,
 } from "../lib/storage";
 import {
   getTasks,
@@ -40,6 +44,8 @@ interface WidgetState {
   tasks: UserTask[];
   rolloverCount: number;
   error: string | null;
+  /* goals */
+  goals: Goal[];
   checkApiKey: () => Promise<void>;
   /* actions */
   setMinimized: (v: boolean) => void;
@@ -50,13 +56,18 @@ interface WidgetState {
   requestSnapshot: () => Promise<void>;
   hydrate: () => Promise<void>;
   loadTasks: () => Promise<void>;
-  addTask: (text: string, dueDate?: string) => Promise<void>;
+  addTask: (text: string, dueDate?: string, category?: TaskCategory, estimatedMinutes?: number) => Promise<void>;
   completeTask: (id: string) => Promise<void>;
   scheduleTask: (id: string, dueDate: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   addGlobalNote: (text: string) => Promise<void>;
   deleteGlobalNote: (id: string) => Promise<void>;
   pinGlobalNote: (id: string, pinned: boolean) => Promise<void>;
+  loadGoals: () => Promise<void>;
+  addGoal: (title: string) => Promise<void>;
+  deleteGoal: (id: string) => Promise<void>;
+  setGoalTasks: (goalId: string, tasks: import("../lib/types").GoalTask[]) => Promise<void>;
+  toggleGoalTask: (goalId: string, taskId: string) => Promise<void>;
 }
 
 const DEFAULT_POS = () => ({
@@ -85,6 +96,7 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
   tasks: [],
   rolloverCount: 0,
   error: null,
+  goals: [],
 
   setMinimized: (v) => {
     set({ minimized: v });
@@ -136,13 +148,14 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
 
   hydrate: async () => {
     if (get().hydrated) return;
-    const [pos, min, session, tasks, { key }, globalNotes] = await Promise.all([
+    const [pos, min, session, tasks, { key }, globalNotes, goals] = await Promise.all([
       storageGet("tabmind:widget:position"),
       storageGet("tabmind:widget:minimized"),
       getLatestSession(),
       getTasks(),
       getActiveApiKey(),
       getGlobalNotes(),
+      getGoals(),
     ]);
     set({
       position: pos ? clampToViewport(pos) : DEFAULT_POS(),
@@ -152,6 +165,7 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
       tasks,
       rolloverCount: getRolloverCount(tasks),
       globalNotes,
+      goals,
       hydrated: true,
     });
   },
@@ -166,12 +180,14 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
     set({ hasApiKey: !!key });
   },
 
-  addTask: async (text, dueDate) => {
+  addTask: async (text, dueDate, category, estimatedMinutes) => {
     await dbAddTask({
       text,
       dueDate: dueDate ?? todayISO(),
       status: "pending",
       isAiGenerated: false,
+      category,
+      estimatedMinutes,
     });
     await get().loadTasks();
   },
@@ -207,5 +223,40 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
     await dbPinGlobalNote(id, pinned);
     const globalNotes = await getGlobalNotes();
     set({ globalNotes });
+  },
+
+  loadGoals: async () => {
+    const goals = await getGoals();
+    set({ goals });
+  },
+
+  addGoal: async (title) => {
+    await dbAddGoal(title);
+    const goals = await getGoals();
+    set({ goals });
+  },
+
+  deleteGoal: async (id) => {
+    await dbDeleteGoal(id);
+    const goals = await getGoals();
+    set({ goals });
+  },
+
+  setGoalTasks: async (goalId, tasks) => {
+    await updateGoal(goalId, { tasks });
+    const goals = await getGoals();
+    set({ goals });
+  },
+
+  toggleGoalTask: async (goalId, taskId) => {
+    const goals = get().goals;
+    const goal = goals.find((g) => g.id === goalId);
+    if (!goal) return;
+    const updatedTasks = goal.tasks.map((t) =>
+      t.id === taskId ? { ...t, done: !t.done } : t
+    );
+    await updateGoal(goalId, { tasks: updatedTasks });
+    const newGoals = await getGoals();
+    set({ goals: newGoals });
   },
 }));

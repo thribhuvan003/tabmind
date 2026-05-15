@@ -1,5 +1,5 @@
 import { runSessionSnapshot } from "../../lib/session-engine";
-import { storageSet, storageGet, getLatestSession } from "../../lib/storage";
+import { storageSet, storageGet, getLatestSession, getActiveApiKey } from "../../lib/storage";
 import { applyTabGroups } from "../../lib/tab-groups";
 import { rolloverOverdueTasks, mergeAiTodos, msUntilMidnight } from "../../lib/tasks";
 import { initSentry, captureError } from "../../lib/sentry";
@@ -50,6 +50,34 @@ async function snapshotPipeline(): Promise<PipelineResult> {
     }
 
     return { snapshot: null, error: friendly };
+  }
+}
+
+async function goalBreakdownPipeline(goalText: string): Promise<{ tasks: string[] }> {
+  if (!goalText.trim()) return { tasks: [] };
+  try {
+    const { provider, key } = await getActiveApiKey();
+    if (!key) return { tasks: [] };
+    const prompt = `Break down this goal into exactly 5 concrete, actionable tasks (each doable in under 2 hours). Be specific. Return JSON only.\nGoal: "${goalText}"\nFormat: {"tasks": ["Task 1", "Task 2", "Task 3", "Task 4", "Task 5"]}`;
+    let raw = "{}";
+    if (provider === "grok") {
+      const r = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ model: "llama-3.3-70b-versatile", temperature: 0.5, max_tokens: 400, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });
+      raw = (await r.json())?.choices?.[0]?.message?.content ?? "{}";
+    } else if (provider === "claude") {
+      const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" }, body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 400, messages: [{ role: "user", content: prompt }] }) });
+      raw = (await r.json())?.content?.[0]?.text ?? "{}";
+    } else if (provider === "gemini") {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.5, maxOutputTokens: 400, responseMimeType: "application/json" } }) });
+      raw = (await r.json())?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+    } else {
+      const r = await fetch("https://api.openai.com/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ model: "gpt-4o-mini", temperature: 0.5, max_tokens: 400, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });
+      raw = (await r.json())?.choices?.[0]?.message?.content ?? "{}";
+    }
+    const parsed = JSON.parse(raw);
+    const tasks = Array.isArray(parsed.tasks) ? parsed.tasks.filter((t: unknown) => typeof t === "string") : [];
+    return { tasks: tasks.slice(0, 7) };
+  } catch {
+    return { tasks: [] };
   }
 }
 
@@ -156,6 +184,15 @@ export default defineBackground(() => {
         if (id != null) chrome.tabs.sendMessage(id, { type: "TABMIND_OPEN_WIDGET" }).catch(() => {});
         sendResponse({ ok: id != null });
       });
+      return true;
+    }
+    if (msg?.type === "TABMIND_GOAL_BREAKDOWN") {
+      goalBreakdownPipeline(msg.goalText ?? "").then(sendResponse).catch(() => sendResponse({ tasks: [] }));
+      return true;
+    }
+    if (msg?.type === "TABMIND_OPEN_DASHBOARD") {
+      try { chrome.tabs.create({ url: chrome.runtime.getURL("dashboard.html") }); } catch { /* ignore */ }
+      sendResponse({ ok: true });
       return true;
     }
   });

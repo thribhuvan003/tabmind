@@ -1,4 +1,4 @@
-﻿import type { StorageSchema, AiProvider, GlobalNote } from "./types";
+﻿import type { StorageSchema, AiProvider, GlobalNote, Goal } from "./types";
 import { DEFAULT_BLOCKLIST } from "./types";
 
 type Key = keyof StorageSchema;
@@ -21,6 +21,7 @@ const AREA: Record<Key, "sync" | "local"> = {
   "tabmind:session:startedAt": "local",
   "tabmind:lastResumeAt": "local",
   "tabmind:notes:global": "local",
+  "tabmind:goals": "local",
 };
 
 function area(key: Key): chrome.storage.StorageArea {
@@ -149,6 +150,33 @@ export function isBlocked(url: string, blocklist: string[]): boolean {
   } catch {
     return false;
   }
+}
+
+/* ─── goals ─────────────────────────────────────────────── */
+
+export async function getGoals(): Promise<Goal[]> {
+  return (await storageGet("tabmind:goals")) ?? [];
+}
+
+export async function saveGoals(goals: Goal[]): Promise<void> {
+  await storageSet("tabmind:goals", goals);
+}
+
+export async function addGoal(title: string): Promise<Goal> {
+  const goal: Goal = { id: crypto.randomUUID(), title: title.trim(), createdAt: Date.now(), tasks: [] };
+  const goals = await getGoals();
+  await saveGoals([goal, ...goals.slice(0, 19)]);
+  return goal;
+}
+
+export async function updateGoal(id: string, patch: Partial<Goal>): Promise<void> {
+  const goals = await getGoals();
+  await saveGoals(goals.map((g) => (g.id === id ? { ...g, ...patch } : g)));
+}
+
+export async function deleteGoal(id: string): Promise<void> {
+  const goals = await getGoals();
+  await saveGoals(goals.filter((g) => g.id !== id));
 }
 
 /* ─── url helpers ──────────────────────────────────────── */

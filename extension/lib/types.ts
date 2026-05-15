@@ -1,5 +1,8 @@
 export type AiProvider = "grok" | "claude" | "gemini" | "openai";
 
+export type TaskCategory = "work" | "personal" | "health" | "learning" | "creative";
+export type NoteCategory = "work" | "personal" | "ideas" | "learning";
+
 export interface TabSnapshot {
   id: number;
   url: string;
@@ -44,6 +47,21 @@ export interface GlobalNote {
   text: string;
   createdAt: number;
   pinned: boolean;
+  category?: NoteCategory;
+}
+
+export interface GoalTask {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
+export interface Goal {
+  id: string;
+  title: string;
+  createdAt: number;
+  tasks: GoalTask[];
+  breaking?: boolean;
 }
 
 export type TaskStatus = "pending" | "done";
@@ -61,6 +79,8 @@ export interface UserTask {
   completedAt?: number;
   /** Previous dueDate if this task was rolled over from a past day */
   rolledOverFrom?: string;
+  category?: TaskCategory;
+  estimatedMinutes?: number;
 }
 
 export interface StorageSchema {
@@ -80,6 +100,7 @@ export interface StorageSchema {
   "tabmind:session:startedAt": number;
   "tabmind:lastResumeAt": number;
   "tabmind:notes:global": GlobalNote[];
+  "tabmind:goals": Goal[];
 }
 
 export const DEFAULT_BLOCKLIST = [

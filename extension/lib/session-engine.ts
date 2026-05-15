@@ -8,8 +8,8 @@
 import { analyzeSession } from "./ai";
 import type { TabSnapshot, SessionSnapshot } from "./types";
 
-const MAX_EXCERPT = 2000;
-const EXCERPT_TIMEOUT_MS = 800;
+const MAX_EXCERPT = 4000;
+const EXCERPT_TIMEOUT_MS = 1500;
 
 const SKIP_PROTOCOLS = ["chrome://", "chrome-extension://", "edge://", "about:", "file://"];
 
