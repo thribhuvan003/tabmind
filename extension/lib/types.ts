@@ -1,4 +1,4 @@
-export type AiProvider = "gemini" | "openai";
+export type AiProvider = "gemini" | "openai" | "claude";
 
 export interface TabSnapshot {
   id: number;
@@ -73,6 +73,7 @@ export interface StorageSchema {
   "tabmind:widget:minimized": boolean;
   "tabmind:gemini:apiKey": string;
   "tabmind:openai:apiKey": string;
+  "tabmind:claude:apiKey": string;
   "tabmind:provider": AiProvider;
   "tabmind:blocklist": string[];
   "tabmind:session:startedAt": number;

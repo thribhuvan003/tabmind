@@ -2,12 +2,14 @@ import type { AiProvider } from "../types";
 import type { AiAdapter, AiInputTab, AiResult } from "./types";
 import { geminiAdapter } from "./gemini";
 import { openaiAdapter } from "./openai";
+import { claudeAdapter } from "./claude";
 
 export type { AiInputTab, AiResult };
 
 const ADAPTERS: Record<AiProvider, AiAdapter> = {
   gemini: geminiAdapter,
   openai: openaiAdapter,
+  claude: claudeAdapter,
 };
 
 export async function analyzeSession(

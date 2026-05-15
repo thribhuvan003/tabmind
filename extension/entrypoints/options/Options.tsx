@@ -84,11 +84,31 @@ const CSS = `
   }
   .blocklist-tag:hover { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.25); color: #fca5a5; }
   .tag { font-size: 9px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: #a78bfa; background: rgba(167,139,250,0.14); border: 1px solid rgba(167,139,250,0.25); padding: 2px 8px; border-radius: 99px; }
+  .provider-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 24px; }
+  .provider-btn {
+    padding: 12px 8px; border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.03); color: #6b6f7d; font-size: 12px; font-weight: 500;
+    text-align: center; transition: all 160ms ease; line-height: 1.4;
+  }
+  .provider-btn.active {
+    color: #e4d9ff; background: rgba(167,139,250,0.12);
+    border-color: rgba(167,139,250,0.4);
+    box-shadow: 0 0 0 3px rgba(167,139,250,0.08);
+  }
+  .provider-btn .provider-name { font-size: 13px; font-weight: 600; display: block; }
+  .provider-btn .provider-sub { font-size: 10px; opacity: 0.6; display: block; margin-top: 2px; }
+  .free-badge {
+    display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 1px 6px; border-radius: 99px;
+    background: rgba(74,222,128,0.12); color: #4ade80;
+    border: 1px solid rgba(74,222,128,0.25); margin-top: 4px;
+  }
 `;
 
 export function Options() {
   const [tab, setTab] = useState<"api" | "blocklist" | "about">("api");
-  const [provider, setProvider] = useState<AiProvider>("gemini");
+  const [provider, setProvider] = useState<AiProvider>("claude");
+  const [claudeKey, setClaudeKey] = useState("");
   const [geminiKey, setGeminiKey] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
   const [saved, setSaved] = useState(false);
@@ -97,11 +117,13 @@ export function Options() {
 
   useEffect(() => {
     Promise.all([
+      storageGet("tabmind:claude:apiKey"),
       storageGet("tabmind:gemini:apiKey"),
       storageGet("tabmind:openai:apiKey"),
       storageGet("tabmind:provider"),
       getBlocklist(),
-    ]).then(([gk, ok, prov, bl]) => {
+    ]).then(([ck, gk, ok, prov, bl]) => {
+      if (ck) setClaudeKey(ck);
       if (gk) setGeminiKey(gk);
       if (ok) setOpenaiKey(ok);
       if (prov) setProvider(prov);
@@ -112,21 +134,28 @@ export function Options() {
   const handleSave = async () => {
     await Promise.all([
       storageSet("tabmind:provider", provider),
+      storageSet("tabmind:claude:apiKey", claudeKey.trim()),
       storageSet("tabmind:gemini:apiKey", geminiKey.trim()),
       storageSet("tabmind:openai:apiKey", openaiKey.trim()),
     ]);
-    // Immediately kick off a snapshot now that a key is available
     chrome.runtime.sendMessage({ type: "TABMIND_SNAPSHOT_NOW" }).catch(() => {});
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
 
+  const activeKeyFilled = () => {
+    if (provider === "claude") return !!claudeKey.trim();
+    if (provider === "openai") return !!openaiKey.trim();
+    return !!geminiKey.trim();
+  };
+
   const handleClearKeys = async () => {
     await Promise.all([
+      storageSet("tabmind:claude:apiKey", ""),
       storageSet("tabmind:gemini:apiKey", ""),
       storageSet("tabmind:openai:apiKey", ""),
     ]);
-    setGeminiKey(""); setOpenaiKey("");
+    setClaudeKey(""); setGeminiKey(""); setOpenaiKey("");
   };
 
   const addDomain = async () => {
@@ -153,7 +182,6 @@ export function Options() {
     <>
       <style>{CSS}</style>
 
-      {/* page header */}
       <div style={{ marginBottom: 32 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -175,7 +203,6 @@ export function Options() {
         </p>
       </div>
 
-      {/* tab bar */}
       <div className="tab-bar">
         {(["api", "blocklist", "about"] as const).map((t) => (
           <button key={t} className={`tab${tab === t ? " active" : ""}`} onClick={() => setTab(t)}>
@@ -184,46 +211,52 @@ export function Options() {
         ))}
       </div>
 
-      {/* ── API tab ── */}
       {tab === "api" && (
         <div className="card">
-          <div className="card-title">API Provider</div>
+          <div className="card-title">AI Provider</div>
 
-          {/* provider toggle */}
-          <label className="label">Provider</label>
-          <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-            {(["gemini", "openai"] as AiProvider[]).map((p) => (
+          <label className="label">Choose provider</label>
+          <div className="provider-grid">
+            {([
+              { id: "claude" as AiProvider, name: "Claude", sub: "Haiku 4.5", free: true },
+              { id: "gemini" as AiProvider, name: "Gemini", sub: "2.0 Flash", free: true },
+              { id: "openai" as AiProvider, name: "OpenAI", sub: "GPT-4o mini", free: false },
+            ]).map((p) => (
               <button
-                key={p}
-                onClick={() => setProvider(p)}
-                style={{
-                  flex: 1, padding: "9px 12px", borderRadius: 9, cursor: "pointer",
-                  fontSize: 13, fontWeight: 500,
-                  border: provider === p ? "1px solid rgba(167,139,250,0.4)" : "1px solid rgba(255,255,255,0.09)",
-                  background: provider === p ? "rgba(167,139,250,0.12)" : "rgba(255,255,255,0.03)",
-                  color: provider === p ? "#e4d9ff" : "#6b6f7d",
-                  transition: "all 160ms ease",
-                }}
+                key={p.id}
+                className={`provider-btn${provider === p.id ? " active" : ""}`}
+                onClick={() => setProvider(p.id)}
               >
-                {p === "gemini" ? "Gemini Flash (free)" : "OpenAI GPT-4o-mini"}
+                <span className="provider-name">{p.name}</span>
+                <span className="provider-sub">{p.sub}</span>
+                {p.free && <span className="free-badge">free tier</span>}
               </button>
             ))}
           </div>
 
-          {/* gemini key */}
+          {provider === "claude" && (
+            <>
+              <label className="label" htmlFor="claude-key">Anthropic API key</label>
+              <input id="claude-key" className="input" type="password" value={claudeKey}
+                onChange={(e) => setClaudeKey(e.target.value)} placeholder="sk-ant-…" autoComplete="off" />
+              <p className="hint">
+                Get a free key from <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.
+                Uses <strong style={{ color: "#c4b5fd" }}>claude-haiku-4-5</strong> — fastest model, generous free tier.
+              </p>
+            </>
+          )}
+
           {provider === "gemini" && (
             <>
               <label className="label" htmlFor="gemini-key">Gemini API key</label>
               <input id="gemini-key" className="input" type="password" value={geminiKey}
                 onChange={(e) => setGeminiKey(e.target.value)} placeholder="AIzaSy…" autoComplete="off" />
               <p className="hint">
-                Free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com</a>.
-                Stored in <code style={{ fontSize: 11, background: "rgba(255,255,255,0.06)", padding: "1px 5px", borderRadius: 4 }}>chrome.storage.sync</code> — syncs across your devices.
+                Free key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a> — create a <strong style={{ color: "#c4b5fd" }}>new project</strong> to get free tier access.
               </p>
             </>
           )}
 
-          {/* openai key */}
           {provider === "openai" && (
             <>
               <label className="label" htmlFor="openai-key">OpenAI API key</label>
@@ -241,27 +274,25 @@ export function Options() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              Saved — takes effect on the next snapshot.
+              Saved — analyzing your tabs now…
             </div>
           )}
 
           <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-            <button className="btn-save" onClick={handleSave}
-              disabled={provider === "gemini" ? !geminiKey.trim() : !openaiKey.trim()}>
+            <button className="btn-save" onClick={handleSave} disabled={!activeKeyFilled()}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
                 <path d="M17 21v-8H7v8M7 3v5h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              Save
+              Save & analyze now
             </button>
-            {(geminiKey || openaiKey) && (
+            {(claudeKey || geminiKey || openaiKey) && (
               <button className="btn-danger" onClick={handleClearKeys}>Clear keys</button>
             )}
           </div>
         </div>
       )}
 
-      {/* ── Blocklist tab ── */}
       {tab === "blocklist" && (
         <div className="card">
           <div className="card-title">Privacy — blocked domains</div>
@@ -269,7 +300,6 @@ export function Options() {
             TabMind will never extract page text from these domains.
             Tab titles and URLs are still used for session summaries.
           </p>
-
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
             {blocklist.map((d) => (
               <button key={d} className="blocklist-tag" onClick={() => removeDomain(d)} title="Click to remove">
@@ -277,7 +307,6 @@ export function Options() {
               </button>
             ))}
           </div>
-
           <div style={{ display: "flex", gap: 8 }}>
             <input
               className="input" style={{ fontFamily: "inherit", flex: 1 }}
@@ -287,21 +316,15 @@ export function Options() {
               onKeyDown={(e) => e.key === "Enter" && addDomain()}
             />
             <button className="btn-save" style={{ marginTop: 0, flexShrink: 0 }} onClick={addDomain}
-              disabled={!newDomain.trim()}>
-              Add
-            </button>
+              disabled={!newDomain.trim()}>Add</button>
           </div>
-
           <button
             onClick={resetBlocklist}
             style={{ marginTop: 14, fontSize: 12, color: "#4b5568", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-          >
-            Reset to defaults ↺
-          </button>
+          >Reset to defaults ↺</button>
         </div>
       )}
 
-      {/* ── About tab ── */}
       {tab === "about" && (
         <div className="card">
           <div className="card-title">Session settings</div>
@@ -320,7 +343,6 @@ export function Options() {
               <span className="row-val">{v}</span>
             </div>
           ))}
-
           <div style={{ display: "flex", gap: 16, marginTop: 20 }}>
             {[
               { label: "Source code", href: "https://github.com/thribhuvan003/tabmind" },
