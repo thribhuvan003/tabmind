@@ -107,7 +107,7 @@ export function Popup() {
             border: "1px solid rgba(167,139,250,0.28)", padding: "2px 6px", borderRadius: 99,
           }}>AI</span>
         </div>
-        <button
+        <button type="button"
           onClick={() => chrome.runtime.openOptionsPage()}
           title="Settings"
           style={{
@@ -146,7 +146,7 @@ export function Popup() {
             <p style={{ fontSize: 11.5, color: "rgba(148,163,184,0.7)", lineHeight: 1.5, marginBottom: 16 }}>
               Free Gemini key from Google AI Studio — takes 30 seconds.
             </p>
-            <button className="btn-ghost" onClick={() => chrome.runtime.openOptionsPage()}>
+            <button type="button" className="btn-ghost" onClick={() => chrome.runtime.openOptionsPage()}>
               Open settings →
             </button>
           </div>
@@ -184,7 +184,7 @@ export function Popup() {
               </div>
             )}
 
-            <button className="btn-primary" onClick={openWidget}>
+            <button type="button" className="btn-primary" onClick={openWidget}>
               <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
                 <circle cx="8" cy="8" r="5" stroke="currentColor" strokeWidth="1.4" opacity="0.5" />
                 <path d="M8 5v3l2 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -198,7 +198,7 @@ export function Popup() {
             <p style={{ fontSize: 13, color: "rgba(148,163,184,0.6)", fontStyle: "italic", lineHeight: 1.55, marginBottom: 14 }}>
               Watching your tabs silently…<br />First snapshot in up to 90 seconds.
             </p>
-            <button className="btn-primary" onClick={() => {
+            <button type="button" className="btn-primary" onClick={() => {
               chrome.runtime.sendMessage({ type: "TABMIND_SNAPSHOT_NOW" });
               window.close();
             }}>

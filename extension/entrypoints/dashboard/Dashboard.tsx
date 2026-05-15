@@ -464,7 +464,7 @@ export function Dashboard() {
             <span className="db-pill">Dashboard</span>
           </div>
           <div className="db-header-right">
-            <button className="db-close-btn" onClick={() => window.close()}>
+            <button type="button" className="db-close-btn" onClick={() => window.close()}>
               Close ×
             </button>
           </div>

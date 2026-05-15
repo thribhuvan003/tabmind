@@ -234,7 +234,7 @@ export function Options() {
 
       <div className="tab-bar">
         {(["api", "blocklist", "about"] as const).map((t) => (
-          <button key={t} className={`tab${tab === t ? " active" : ""}`} onClick={() => setTab(t)}>
+          <button type="button" key={t} className={`tab${tab === t ? " active" : ""}`} onClick={() => setTab(t)}>
             {t === "api" ? "AI Provider" : t === "blocklist" ? "Privacy" : "About"}
           </button>
         ))}
@@ -266,7 +266,7 @@ export function Options() {
               { id: "gemini" as AiProvider, name: "Gemini", sub: "2.0 Flash", free: true },
               { id: "openai" as AiProvider, name: "OpenAI", sub: "GPT-4o mini", free: false },
             ]).map((p) => (
-              <button
+              <button type="button"
                 key={p.id}
                 className={`provider-btn${provider === p.id ? " active" : ""}`}
                 onClick={() => setProvider(p.id)}
@@ -359,7 +359,7 @@ export function Options() {
           )}
 
           <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-            <button className="btn-save" onClick={handleSave} disabled={!activeKeyFilled()}>
+            <button type="button" className="btn-save" onClick={handleSave} disabled={!activeKeyFilled()}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
                 <path d="M17 21v-8H7v8M7 3v5h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -367,7 +367,7 @@ export function Options() {
               Save & analyze now
             </button>
             {(grokKey || claudeKey || geminiKey || openaiKey || openrouterKey || cerebrasKey) && (
-              <button className="btn-danger" onClick={handleClearKeys}>Clear keys</button>
+              <button type="button" className="btn-danger" onClick={handleClearKeys}>Clear keys</button>
             )}
           </div>
         </div>
@@ -382,7 +382,7 @@ export function Options() {
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
             {blocklist.map((d) => (
-              <button key={d} className="blocklist-tag" onClick={() => removeDomain(d)} title="Click to remove">
+              <button type="button" key={d} className="blocklist-tag" onClick={() => removeDomain(d)} title="Click to remove">
                 {d} <span style={{ opacity: 0.5, fontSize: 10 }}>×</span>
               </button>
             ))}
@@ -395,10 +395,10 @@ export function Options() {
               onChange={(e) => setNewDomain(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addDomain()}
             />
-            <button className="btn-save" style={{ marginTop: 0, flexShrink: 0 }} onClick={addDomain}
+            <button type="button" className="btn-save" style={{ marginTop: 0, flexShrink: 0 }} onClick={addDomain}
               disabled={!newDomain.trim()}>Add</button>
           </div>
-          <button
+          <button type="button"
             onClick={resetBlocklist}
             style={{ marginTop: 14, fontSize: 12, color: "#4b5568", background: "none", border: "none", cursor: "pointer", padding: 0 }}
           >Reset to defaults ↺</button>
