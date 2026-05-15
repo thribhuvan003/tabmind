@@ -21,18 +21,20 @@ async function broadcastToAll(type: string) {
   } catch { /* no tabs — fine */ }
 }
 
-async function snapshotPipeline() {
+type PipelineResult = { snapshot: import("../../lib/types").SessionSnapshot | null; error?: string };
+
+async function snapshotPipeline(): Promise<PipelineResult> {
   try {
     const snap = await runSessionSnapshot();
-    if (!snap) return null;
+    if (!snap) return { snapshot: null, error: "No trackable tabs found or API key missing." };
     await applyTabGroups(snap.groups);
-    // Merge AI todos into the persistent task list.
     if (snap.todos?.length) await mergeAiTodos(snap.todos);
     await broadcastToAll("TABMIND_SESSION_UPDATED");
-    return snap;
+    return { snapshot: snap };
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
     captureError(err, { fn: "snapshotPipeline" });
-    return null;
+    return { snapshot: null, error: msg };
   }
 }
 

@@ -118,19 +118,20 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
   requestSnapshot: async () => {
     set({ loading: true, error: null });
     try {
-      const result: SessionSnapshot | null = await chrome.runtime.sendMessage({
-        type: "TABMIND_SNAPSHOT_NOW",
-      });
-      if (result) {
-        set({ session: result, hasApiKey: true, error: null });
+      const res: { snapshot: SessionSnapshot | null; error?: string } | null =
+        await chrome.runtime.sendMessage({ type: "TABMIND_SNAPSHOT_NOW" });
+      if (res?.snapshot) {
+        set({ session: res.snapshot, hasApiKey: true, error: null });
       } else {
-        set({ error: "Analysis returned no result. Check your API key in Settings." });
+        const detail = res?.error ?? "No result returned.";
+        set({ error: detail });
       }
       await get().loadTasks();
-    } catch (e) {
-      set({ error: "Could not reach the extension background. Try reloading the page." });
+    } catch {
+      set({ error: "Extension background unreachable — reload the page and try again." });
+    } finally {
+      set({ loading: false });
     }
-    finally { set({ loading: false }); }
   },
 
   hydrate: async () => {

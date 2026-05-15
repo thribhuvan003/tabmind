@@ -2,8 +2,9 @@ import type { AiAdapter, AiInputTab, AiResult } from "./types";
 import { buildSessionPrompt } from "./prompt";
 import { parseAiJson } from "./parse";
 
+// gemini-2.0-flash: free tier, fast, stable as of 2025+
 const ENDPOINT =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
 export const geminiAdapter: AiAdapter = {
   async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string): Promise<AiResult> {
