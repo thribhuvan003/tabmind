@@ -1,5 +1,19 @@
 import { create } from "zustand";
 import type { SessionSnapshot, UrlNote, UserTask, GlobalNote, Goal, TaskCategory } from "../lib/types";
+
+/** Retry chrome.runtime.sendMessage up to 3 times — MV3 service workers go to sleep. */
+async function sendMsg(msg: object, retries = 3): Promise<unknown> {
+  let last: unknown;
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await chrome.runtime.sendMessage(msg);
+    } catch (e) {
+      last = e;
+      if (i < retries - 1) await new Promise(r => setTimeout(r, 700));
+    }
+  }
+  throw last;
+}
 import {
   getLatestSession,
   getNote,
@@ -130,17 +144,15 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
   requestSnapshot: async () => {
     set({ loading: true, error: null });
     try {
-      const res: { snapshot: SessionSnapshot | null; error?: string } | null =
-        await chrome.runtime.sendMessage({ type: "TABMIND_SNAPSHOT_NOW" });
+      const res = await sendMsg({ type: "TABMIND_SNAPSHOT_NOW" }) as { snapshot: SessionSnapshot | null; error?: string } | null;
       if (res?.snapshot) {
         set({ session: res.snapshot, hasApiKey: true, error: null });
       } else {
-        const detail = res?.error ?? "No result returned.";
-        set({ error: detail });
+        set({ error: res?.error ?? "No result returned." });
       }
       await get().loadTasks();
     } catch {
-      set({ error: "Extension background unreachable — reload the page and try again." });
+      set({ error: "Background worker couldn't be reached. Open chrome://extensions, click the reload icon on TabMind, then try again." });
     } finally {
       set({ loading: false });
     }

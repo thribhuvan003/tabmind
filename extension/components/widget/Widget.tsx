@@ -827,8 +827,14 @@ function GoalsTab({
     try {
       // First save the goal
       await onAddGoal(title);
-      // Then request AI breakdown
-      const res = await chrome.runtime.sendMessage({ type: "TABMIND_GOAL_BREAKDOWN", goalText: title });
+      // Then request AI breakdown — retry in case service worker is sleeping
+      let res: { tasks?: string[] } | null = null;
+      for (let i = 0; i < 3; i++) {
+        try {
+          res = await chrome.runtime.sendMessage({ type: "TABMIND_GOAL_BREAKDOWN", goalText: title });
+          break;
+        } catch { if (i < 2) await new Promise(r => setTimeout(r, 700)); }
+      }
       const taskTexts: string[] = res?.tasks ?? [];
       if (taskTexts.length > 0) {
         // Get the newly added goal (it'll be first in the list)
