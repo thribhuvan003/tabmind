@@ -2,7 +2,7 @@ import type { AiAdapter, AiInputTab, AiResult } from "./types";
 import { buildSessionPrompt } from "./prompt";
 import { parseAiJson } from "./parse";
 
-const ENDPOINT = "https://api.x.ai/v1/chat/completions";
+const ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 
 export const grokAdapter: AiAdapter = {
   async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string): Promise<AiResult> {
@@ -14,14 +14,14 @@ export const grokAdapter: AiAdapter = {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "grok-3-mini",
+        model: "llama-3.3-70b-versatile",
         temperature: 0.25,
         max_tokens: 1024,
         response_format: { type: "json_object" },
         messages: [{ role: "user", content: prompt }],
       }),
     });
-    if (!res.ok) throw new Error(`Grok ${res.status}: ${await res.text().catch(() => "")}`);
+    if (!res.ok) throw new Error(`Groq ${res.status}: ${await res.text().catch(() => "")}`);
     const data = await res.json();
     const raw = data?.choices?.[0]?.message?.content ?? "{}";
     return parseAiJson(raw);

@@ -44,7 +44,7 @@ async function snapshotPipeline(): Promise<PipelineResult> {
         friendly = "Rate limit hit (429). Wait a minute and try again, or check your quota at ai.dev/rate-limit.";
       }
     } else if (raw.includes("401") || raw.includes("403") || raw.includes("API_KEY_INVALID")) {
-      friendly = "Invalid API key. Re-check the key in Settings — console.x.ai (Grok), console.anthropic.com (Claude), or aistudio.google.com (Gemini).";
+      friendly = "Invalid API key. Re-check the key in Settings — console.groq.com (Groq), console.anthropic.com (Claude), or aistudio.google.com (Gemini).";
     } else if (raw.includes("404")) {
       friendly = "Model not found (404). Try saving your API key again to trigger a fresh snapshot.";
     }

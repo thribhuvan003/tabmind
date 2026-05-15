@@ -224,7 +224,7 @@ export function Options() {
           <label className="label">Choose provider</label>
           <div className="provider-grid">
             {([
-              { id: "grok" as AiProvider, name: "Grok", sub: "grok-3-mini", free: true },
+              { id: "grok" as AiProvider, name: "Groq", sub: "Llama 3.3 70B", free: true },
               { id: "claude" as AiProvider, name: "Claude", sub: "Haiku 4.5", free: true },
               { id: "gemini" as AiProvider, name: "Gemini", sub: "2.0 Flash", free: true },
               { id: "openai" as AiProvider, name: "OpenAI", sub: "GPT-4o mini", free: false },
@@ -243,12 +243,12 @@ export function Options() {
 
           {provider === "grok" && (
             <>
-              <label className="label" htmlFor="grok-key">xAI API key</label>
+              <label className="label" htmlFor="grok-key">Groq API key</label>
               <input id="grok-key" className="input" type="password" value={grokKey}
                 onChange={(e) => setGrokKey(e.target.value)} placeholder="gsk_…" autoComplete="off" />
               <p className="hint">
-                Get a key from <a href="https://console.x.ai" target="_blank" rel="noopener">console.x.ai</a>.
-                Uses <strong style={{ color: "#c4b5fd" }}>grok-3-mini</strong> — fast, free tier available.
+                Free key from <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com</a>.
+                Uses <strong style={{ color: "#c4b5fd" }}>Llama 3.3 70B</strong> — fully free, extremely fast inference.
               </p>
             </>
           )}
