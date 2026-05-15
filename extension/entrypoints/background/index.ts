@@ -32,9 +32,24 @@ async function snapshotPipeline(): Promise<PipelineResult> {
     await broadcastToAll("TABMIND_SESSION_UPDATED");
     return { snapshot: snap };
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const raw = err instanceof Error ? err.message : String(err);
     captureError(err, { fn: "snapshotPipeline" });
-    return { snapshot: null, error: msg };
+
+    // Friendly messages for common API errors
+    let friendly = raw;
+    if (raw.includes("429") || raw.includes("RESOURCE_EXHAUSTED")) {
+      if (raw.includes("free_tier") || raw.includes("limit: 0")) {
+        friendly = "API key quota is 0 — your key's Google Cloud project has no free tier access. Go to aistudio.google.com/apikey, create a NEW project, and use that key instead.";
+      } else {
+        friendly = "Rate limit hit (429). Wait a minute and try again, or check your quota at ai.dev/rate-limit.";
+      }
+    } else if (raw.includes("401") || raw.includes("403") || raw.includes("API_KEY_INVALID")) {
+      friendly = "Invalid API key. Re-check the key in Settings — make sure you copied it fully from aistudio.google.com.";
+    } else if (raw.includes("404")) {
+      friendly = "Gemini model not found (404). Try saving your API key again to trigger a fresh snapshot.";
+    }
+
+    return { snapshot: null, error: friendly };
   }
 }
 
