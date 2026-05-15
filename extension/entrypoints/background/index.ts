@@ -86,7 +86,7 @@ async function goalBreakdownPipeline(goalText: string): Promise<{ tasks: string[
       const r = await fetch("https://openrouter.ai/api/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "HTTP-Referer": "https://github.com/thribhuvan003/tabmind", "X-Title": "TabMind" }, body: JSON.stringify({ model: "meta-llama/llama-3.3-70b-instruct:free", temperature: 0.5, max_tokens: 400, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });
       raw = (await r.json())?.choices?.[0]?.message?.content ?? "{}";
     } else if (provider === "cerebras") {
-      const r = await fetch("https://api.cerebras.ai/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ model: "llama-3.3-70b", temperature: 0.5, max_tokens: 400, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });
+      const r = await fetch("https://api.cerebras.ai/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ model: "llama-3.3-70b", temperature: 0.5, max_tokens: 400, messages: [{ role: "user", content: prompt }] }) });
       raw = (await r.json())?.choices?.[0]?.message?.content ?? "{}";
     } else {
       const r = await fetch("https://api.openai.com/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ model: "gpt-4o-mini", temperature: 0.5, max_tokens: 400, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });

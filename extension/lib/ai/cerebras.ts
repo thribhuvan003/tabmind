@@ -18,7 +18,6 @@ export const cerebrasAdapter: AiAdapter = {
         model: MODEL,
         temperature: 0.25,
         max_tokens: 1024,
-        response_format: { type: "json_object" },
         messages: [{ role: "user", content: prompt }],
       }),
     });
