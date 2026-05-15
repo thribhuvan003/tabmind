@@ -25,6 +25,7 @@ type PipelineResult = { snapshot: import("../../lib/types").SessionSnapshot | nu
 
 async function snapshotPipeline(): Promise<PipelineResult> {
   try {
+    const { provider } = await getActiveApiKey();
     const snap = await runSessionSnapshot();
     if (!snap) return { snapshot: null, error: "No trackable tabs found or API key missing." };
     await applyTabGroups(snap.groups);
@@ -35,18 +36,30 @@ async function snapshotPipeline(): Promise<PipelineResult> {
     const raw = err instanceof Error ? err.message : String(err);
     captureError(err, { fn: "snapshotPipeline" });
 
-    // Friendly messages for common API errors
+    // Read provider for targeted error links
+    const { provider } = await getActiveApiKey().catch(() => ({ provider: "grok" as const }));
+
+    const keyLinks: Record<string, string> = {
+      openrouter: "openrouter.ai/keys",
+      cerebras: "cloud.cerebras.ai/platform/api-keys",
+      grok: "console.groq.com/keys",
+      claude: "console.anthropic.com/settings/keys",
+      gemini: "aistudio.google.com/apikey",
+      openai: "platform.openai.com/api-keys",
+    };
+    const link = keyLinks[provider] ?? "openrouter.ai/keys";
+
     let friendly = raw;
-    if (raw.includes("429") || raw.includes("RESOURCE_EXHAUSTED")) {
+    if (raw.includes("429") || raw.includes("RESOURCE_EXHAUSTED") || raw.includes("rate") || raw.includes("Rate")) {
       if (raw.includes("free_tier") || raw.includes("limit: 0")) {
-        friendly = "API key quota is 0 — your key's Google Cloud project has no free tier access. Go to aistudio.google.com/apikey, create a NEW project, and use that key instead.";
+        friendly = "API key quota is 0. Create a new project or upgrade your plan at " + link;
       } else {
-        friendly = "Rate limit hit (429). Wait a minute and try again, or check your quota at ai.dev/rate-limit.";
+        friendly = `Rate limit hit (429) on ${provider}. TabMind will retry in 3 minutes — or switch to Cerebras/Groq for higher free limits.`;
       }
-    } else if (raw.includes("401") || raw.includes("403") || raw.includes("API_KEY_INVALID")) {
-      friendly = "Invalid API key. Re-check the key in Settings — openrouter.ai/keys (OpenRouter), console.groq.com (Groq), console.anthropic.com (Claude), or aistudio.google.com (Gemini).";
+    } else if (raw.includes("401") || raw.includes("403") || raw.includes("API_KEY_INVALID") || raw.includes("Invalid") || raw.includes("Unauthorized")) {
+      friendly = `Invalid API key for ${provider}. Re-paste your key in Settings → ${link}`;
     } else if (raw.includes("404")) {
-      friendly = "Model not found (404). Try saving your API key again to trigger a fresh snapshot.";
+      friendly = `Model not found (404) on ${provider}. Try saving your key again.`;
     }
 
     return { snapshot: null, error: friendly };
@@ -107,7 +120,7 @@ function scheduleRolloverAlarm() {
 
 async function ensureAlarms() {
   const snap = await chrome.alarms.get(ALARM_SNAPSHOT);
-  if (!snap) chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: 1.5 });
+  if (!snap) chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: 3 });
   const roll = await chrome.alarms.get(ALARM_ROLLOVER);
   if (!roll) scheduleRolloverAlarm();
 }
@@ -120,7 +133,7 @@ async function ensureSessionStart() {
 export default defineBackground(() => {
   chrome.runtime.onInstalled.addListener(async () => {
     await storageSet("tabmind:session:startedAt", Date.now());
-    chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: 1.5 });
+    chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: 3 });
     scheduleRolloverAlarm();
     try { chrome.idle?.setDetectionInterval?.(IDLE_RESET_MIN * 60); } catch { /* ignore */ }
   });
@@ -128,7 +141,7 @@ export default defineBackground(() => {
   chrome.runtime.onStartup.addListener(async () => {
     await storageSet("tabmind:session:startedAt", Date.now());
     await storageSet("tabmind:lastResumeAt", Date.now());
-    chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: 1.5 });
+    chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: 3 });
     scheduleRolloverAlarm();
     // Check for rollover tasks on browser start (handles overnight).
     await doRollover();

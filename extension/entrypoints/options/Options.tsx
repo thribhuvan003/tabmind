@@ -115,6 +115,17 @@ export function Options() {
   const [openrouterKey, setOpenrouterKey] = useState("");
   const [cerebrasKey, setCerebrasKey] = useState("");
   const [saved, setSaved] = useState(false);
+
+  // Auto-detect provider from key prefix as user types
+  const autoDetect = (key: string) => {
+    const k = key.trim();
+    if (k.startsWith("sk-or-v1-")) { setOpenrouterKey(k); setProvider("openrouter"); }
+    else if (k.startsWith("csk-")) { setCerebrasKey(k); setProvider("cerebras"); }
+    else if (k.startsWith("gsk_")) { setGrokKey(k); setProvider("grok"); }
+    else if (k.startsWith("sk-ant-")) { setClaudeKey(k); setProvider("claude"); }
+    else if (k.startsWith("AIzaSy")) { setGeminiKey(k); setProvider("gemini"); }
+    else if (k.startsWith("sk-")) { setOpenaiKey(k); setProvider("openai"); }
+  };
   const [blocklist, setBlocklistState] = useState<string[]>([]);
   const [newDomain, setNewDomain] = useState("");
 
@@ -233,7 +244,19 @@ export function Options() {
         <div className="card">
           <div className="card-title">AI Provider</div>
 
-          <label className="label">Choose provider</label>
+          <label className="label">Paste any API key — provider auto-detected</label>
+          <input
+            className="input"
+            type="password"
+            placeholder="Paste key: sk-or-v1-… / csk-… / gsk_… / sk-ant-… / AIzaSy… / sk-…"
+            autoComplete="off"
+            onChange={(e) => autoDetect(e.target.value)}
+          />
+          <p className="hint" style={{ marginBottom: 20 }}>
+            Key prefix is recognized automatically. Active: <strong style={{ color: "#a78bfa" }}>{provider}</strong>
+          </p>
+
+          <label className="label">Or choose provider manually</label>
           <div className="provider-grid">
             {([
               { id: "openrouter" as AiProvider, name: "OpenRouter", sub: "Llama 3.3 70B", free: true },
