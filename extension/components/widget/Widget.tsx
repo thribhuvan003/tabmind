@@ -993,7 +993,7 @@ function NoApiKeyBanner() {
       </div>
       <p className="tm-no-key-title">Add an API key to get started</p>
       <p className="tm-no-key-body">
-        TabMind needs a free Groq key (or OpenAI / Claude / Gemini) to analyze your tabs and surface insights.
+        TabMind needs an API key to analyze your tabs. OpenRouter and Cerebras both have generous free tiers.
       </p>
       <button
         className="tm-btn tm-btn-primary"
