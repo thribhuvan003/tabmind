@@ -39,6 +39,8 @@ interface WidgetState {
   /* tasks */
   tasks: UserTask[];
   rolloverCount: number;
+  error: string | null;
+  checkApiKey: () => Promise<void>;
   /* actions */
   setMinimized: (v: boolean) => void;
   setPosition: (pos: { x: number; y: number }) => void;
@@ -82,6 +84,7 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
   globalNotes: [],
   tasks: [],
   rolloverCount: 0,
+  error: null,
 
   setMinimized: (v) => {
     set({ minimized: v });
@@ -113,16 +116,20 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
   },
 
   requestSnapshot: async () => {
-    set({ loading: true });
+    set({ loading: true, error: null });
     try {
       const result: SessionSnapshot | null = await chrome.runtime.sendMessage({
         type: "TABMIND_SNAPSHOT_NOW",
       });
       if (result) {
-        set({ session: result, hasApiKey: true });
+        set({ session: result, hasApiKey: true, error: null });
+      } else {
+        set({ error: "Analysis returned no result. Check your API key in Settings." });
       }
       await get().loadTasks();
-    } catch { /* extension context may not be ready */ }
+    } catch (e) {
+      set({ error: "Could not reach the extension background. Try reloading the page." });
+    }
     finally { set({ loading: false }); }
   },
 
@@ -151,6 +158,11 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
   loadTasks: async () => {
     const tasks = await getTasks();
     set({ tasks, rolloverCount: getRolloverCount(tasks) });
+  },
+
+  checkApiKey: async () => {
+    const { key } = await getActiveApiKey();
+    set({ hasApiKey: !!key });
   },
 
   addTask: async (text, dueDate) => {

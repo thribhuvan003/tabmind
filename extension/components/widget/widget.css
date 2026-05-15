@@ -631,3 +631,14 @@
 .tm-qn-btn[data-active] { color: var(--c-accent); opacity: 1; }
 .tm-qn-btn--delete:hover { background: rgba(248, 113, 113, 0.1); color: var(--c-danger); }
 .tm-qn-btn:focus-visible { outline: 2px solid var(--c-accent-line); outline-offset: 1px; }
+
+/* ── inline error bar ────────────────────────────────────── */
+.tm-error-bar {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 20px 12px;
+  font-size: 11.5px; line-height: 1.55; color: var(--c-danger);
+  background: rgba(248, 113, 113, 0.06);
+  border-bottom: 1px solid rgba(248, 113, 113, 0.15);
+  letter-spacing: -0.003em;
+}
+.tm-error-bar svg { flex-shrink: 0; margin-top: 1px; }

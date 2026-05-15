@@ -54,6 +54,13 @@ function scheduleRolloverAlarm() {
   });
 }
 
+async function ensureAlarms() {
+  const snap = await chrome.alarms.get(ALARM_SNAPSHOT);
+  if (!snap) chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: 1.5 });
+  const roll = await chrome.alarms.get(ALARM_ROLLOVER);
+  if (!roll) scheduleRolloverAlarm();
+}
+
 async function ensureSessionStart() {
   const started = await storageGet("tabmind:session:startedAt");
   if (!started) await storageSet("tabmind:session:startedAt", Date.now());
@@ -111,6 +118,8 @@ export default defineBackground(() => {
   } catch { /* commands API unavailable */ }
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    // Health-check alarms on every message (service workers can restart without onInstalled)
+    ensureAlarms().catch(() => {});
     if (msg?.type === "TABMIND_SNAPSHOT_NOW") {
       snapshotPipeline().then(sendResponse).catch(() => sendResponse(null));
       return true;

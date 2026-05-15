@@ -55,6 +55,7 @@ function WidgetInner() {
     rolloverCount,
     hasApiKey,
     globalNotes,
+    error,
     setPosition,
     setMinimized,
     loadSession,
@@ -209,6 +210,17 @@ function WidgetInner() {
           {/* no-key state */}
           {!hasApiKey && !session && <NoApiKeyBanner />}
 
+          {/* error state */}
+          {error && (
+            <div className="tm-error-bar" data-no-drag>
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.4"/>
+                <path d="M8 5v4M8 11v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              {error}
+            </div>
+          )}
+
           {/* session block */}
           <SessionBlock
             topic={session?.topic ?? null}
@@ -216,6 +228,7 @@ function WidgetInner() {
             summary={session?.summary ?? null}
             minutes={minutes}
             hasApiKey={hasApiKey}
+            loading={loading}
           />
 
           {/* per-page note */}
@@ -328,16 +341,17 @@ function SessionBlock({
   summary,
   minutes,
   hasApiKey,
+  loading,
 }: {
   topic: string | null;
   narrative: string | null;
   summary: string | null;
   minutes: number;
   hasApiKey: boolean;
+  loading: boolean;
 }) {
-  const placeholder = hasApiKey
-    ? "Listening to your tabs…"
-    : "Ready when you add an API key.";
+  const noSession = !topic && !narrative && !summary;
+  const placeholder = loading ? "Analyzing your tabs…" : hasApiKey ? "Ready to analyze" : "Ready when you add an API key.";
 
   return (
     <div className="tm-session">
@@ -354,12 +368,14 @@ function SessionBlock({
         <p className="tm-narrative">{narrative}</p>
       ) : summary ? (
         <p className="tm-narrative">{summary}</p>
-      ) : (
+      ) : noSession && hasApiKey ? (
         <p className="tm-narrative tm-narrative-empty">
-          {hasApiKey
-            ? "Your next session narrative will appear here after the first analysis."
-            : "Add a Gemini or OpenAI key in Settings to enable passive tab analysis."}
+          {loading
+            ? "Reading your open tabs…"
+            : "Hit ↻ above to analyze your tabs now — or wait 90 seconds for the auto-snapshot."}
         </p>
+      ) : !hasApiKey ? null : (
+        <p className="tm-narrative tm-narrative-empty">Analysis will appear here.</p>
       )}
     </div>
   );

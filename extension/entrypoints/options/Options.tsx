@@ -115,6 +115,8 @@ export function Options() {
       storageSet("tabmind:gemini:apiKey", geminiKey.trim()),
       storageSet("tabmind:openai:apiKey", openaiKey.trim()),
     ]);
+    // Immediately kick off a snapshot now that a key is available
+    chrome.runtime.sendMessage({ type: "TABMIND_SNAPSHOT_NOW" }).catch(() => {});
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };

@@ -1,4 +1,4 @@
-﻿import ReactDOM from "react-dom/client";
+import ReactDOM from "react-dom/client";
 import { Widget } from "../../components/widget/Widget";
 import { useWidgetStore } from "../../stores/widget.store";
 import { initSentry } from "../../lib/sentry";
@@ -14,7 +14,6 @@ function getPageExcerpt(): string {
     document.querySelector("article") ||
     document.body;
   if (!root) return "";
-  // Avoid script/style noise — innerText already strips those.
   const text = (root as HTMLElement).innerText || "";
   return text.replace(/\s+/g, " ").trim().slice(0, MAX_EXCERPT);
 }
@@ -28,7 +27,6 @@ function installUrlWatcher(onChange: (url: string) => void) {
       onChange(lastUrl);
     }
   };
-  // Wrap History API
   const wrap = (k: "pushState" | "replaceState") => {
     const orig = history[k];
     history[k] = function (this: History, ...args: Parameters<typeof orig>) {
@@ -52,7 +50,7 @@ export default defineContentScript({
     chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       if (msg?.type === "TABMIND_GET_EXCERPT") {
         sendResponse({ text: getPageExcerpt() });
-        return; // sync response
+        return;
       }
     });
 
@@ -61,6 +59,7 @@ export default defineContentScript({
       position: "overlay",
       anchor: "body",
       append: "last",
+      zIndex: 2147483647,
       onMount(container) {
         const root = ReactDOM.createRoot(container);
         root.render(<Widget />);
@@ -81,14 +80,31 @@ export default defineContentScript({
       }
     });
 
-    // Popup → "open widget here" + ⌘⇧K toggle.
+    // Re-detect API key when user saves it in Settings (storage change from options page).
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === "sync" && (
+        changes["tabmind:gemini:apiKey"] ||
+        changes["tabmind:openai:apiKey"] ||
+        changes["tabmind:provider"]
+      )) {
+        try { useWidgetStore.getState().checkApiKey(); } catch { /* */ }
+      }
+    });
+
+    // Popup → "open widget here" + ⌘⇧K toggle + session updates.
     chrome.runtime.onMessage.addListener((msg) => {
       try {
+        const s = useWidgetStore.getState();
         if (msg?.type === "TABMIND_OPEN_WIDGET") {
-          useWidgetStore.getState().setMinimized(false);
+          s.setMinimized(false);
         } else if (msg?.type === "TABMIND_TOGGLE_WIDGET") {
-          const s = useWidgetStore.getState();
           s.setMinimized(!s.minimized);
+        } else if (msg?.type === "TABMIND_SESSION_UPDATED") {
+          s.loadSession();
+          s.loadTasks();
+          s.checkApiKey();
+        } else if (msg?.type === "TABMIND_TASKS_UPDATED") {
+          s.loadTasks();
         }
       } catch {
         /* */
