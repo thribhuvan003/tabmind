@@ -84,7 +84,7 @@ const CSS = `
   }
   .blocklist-tag:hover { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.25); color: #fca5a5; }
   .tag { font-size: 9px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: #a78bfa; background: rgba(167,139,250,0.14); border: 1px solid rgba(167,139,250,0.25); padding: 2px 8px; border-radius: 99px; }
-  .provider-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 24px; }
+  .provider-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 24px; }
   .provider-btn {
     padding: 12px 8px; border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.09);
     background: rgba(255,255,255,0.03); color: #6b6f7d; font-size: 12px; font-weight: 500;
@@ -107,7 +107,8 @@ const CSS = `
 
 export function Options() {
   const [tab, setTab] = useState<"api" | "blocklist" | "about">("api");
-  const [provider, setProvider] = useState<AiProvider>("claude");
+  const [provider, setProvider] = useState<AiProvider>("grok");
+  const [grokKey, setGrokKey] = useState("");
   const [claudeKey, setClaudeKey] = useState("");
   const [geminiKey, setGeminiKey] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
@@ -117,12 +118,14 @@ export function Options() {
 
   useEffect(() => {
     Promise.all([
+      storageGet("tabmind:grok:apiKey"),
       storageGet("tabmind:claude:apiKey"),
       storageGet("tabmind:gemini:apiKey"),
       storageGet("tabmind:openai:apiKey"),
       storageGet("tabmind:provider"),
       getBlocklist(),
-    ]).then(([ck, gk, ok, prov, bl]) => {
+    ]).then(([xk, ck, gk, ok, prov, bl]) => {
+      if (xk) setGrokKey(xk);
       if (ck) setClaudeKey(ck);
       if (gk) setGeminiKey(gk);
       if (ok) setOpenaiKey(ok);
@@ -134,6 +137,7 @@ export function Options() {
   const handleSave = async () => {
     await Promise.all([
       storageSet("tabmind:provider", provider),
+      storageSet("tabmind:grok:apiKey", grokKey.trim()),
       storageSet("tabmind:claude:apiKey", claudeKey.trim()),
       storageSet("tabmind:gemini:apiKey", geminiKey.trim()),
       storageSet("tabmind:openai:apiKey", openaiKey.trim()),
@@ -144,6 +148,7 @@ export function Options() {
   };
 
   const activeKeyFilled = () => {
+    if (provider === "grok") return !!grokKey.trim();
     if (provider === "claude") return !!claudeKey.trim();
     if (provider === "openai") return !!openaiKey.trim();
     return !!geminiKey.trim();
@@ -151,11 +156,12 @@ export function Options() {
 
   const handleClearKeys = async () => {
     await Promise.all([
+      storageSet("tabmind:grok:apiKey", ""),
       storageSet("tabmind:claude:apiKey", ""),
       storageSet("tabmind:gemini:apiKey", ""),
       storageSet("tabmind:openai:apiKey", ""),
     ]);
-    setClaudeKey(""); setGeminiKey(""); setOpenaiKey("");
+    setGrokKey(""); setClaudeKey(""); setGeminiKey(""); setOpenaiKey("");
   };
 
   const addDomain = async () => {
@@ -218,6 +224,7 @@ export function Options() {
           <label className="label">Choose provider</label>
           <div className="provider-grid">
             {([
+              { id: "grok" as AiProvider, name: "Grok", sub: "grok-3-mini", free: true },
               { id: "claude" as AiProvider, name: "Claude", sub: "Haiku 4.5", free: true },
               { id: "gemini" as AiProvider, name: "Gemini", sub: "2.0 Flash", free: true },
               { id: "openai" as AiProvider, name: "OpenAI", sub: "GPT-4o mini", free: false },
@@ -233,6 +240,18 @@ export function Options() {
               </button>
             ))}
           </div>
+
+          {provider === "grok" && (
+            <>
+              <label className="label" htmlFor="grok-key">xAI API key</label>
+              <input id="grok-key" className="input" type="password" value={grokKey}
+                onChange={(e) => setGrokKey(e.target.value)} placeholder="gsk_…" autoComplete="off" />
+              <p className="hint">
+                Get a key from <a href="https://console.x.ai" target="_blank" rel="noopener">console.x.ai</a>.
+                Uses <strong style={{ color: "#c4b5fd" }}>grok-3-mini</strong> — fast, free tier available.
+              </p>
+            </>
+          )}
 
           {provider === "claude" && (
             <>
@@ -286,7 +305,7 @@ export function Options() {
               </svg>
               Save & analyze now
             </button>
-            {(claudeKey || geminiKey || openaiKey) && (
+            {(grokKey || claudeKey || geminiKey || openaiKey) && (
               <button className="btn-danger" onClick={handleClearKeys}>Clear keys</button>
             )}
           </div>

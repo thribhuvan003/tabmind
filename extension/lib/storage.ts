@@ -5,6 +5,7 @@ type Key = keyof StorageSchema;
 
 /** Routing table: which keys live in sync (cross-device) vs local (large/device-only). */
 const AREA: Record<Key, "sync" | "local"> = {
+  "tabmind:grok:apiKey": "sync",
   "tabmind:gemini:apiKey": "sync",
   "tabmind:openai:apiKey": "sync",
   "tabmind:claude:apiKey": "sync",
@@ -77,13 +78,15 @@ export async function saveSession(snapshot: StorageSchema["tabmind:session:lates
 /* ─── provider / keys ──────────────────────────────────── */
 
 export async function getProvider(): Promise<AiProvider> {
-  return (await storageGet("tabmind:provider")) ?? "claude";
+  return (await storageGet("tabmind:provider")) ?? "grok";
 }
 
 export async function getActiveApiKey(): Promise<{ provider: AiProvider; key: string }> {
   const provider = await getProvider();
   let key = "";
-  if (provider === "openai") {
+  if (provider === "grok") {
+    key = (await storageGet("tabmind:grok:apiKey")) ?? "";
+  } else if (provider === "openai") {
     key = (await storageGet("tabmind:openai:apiKey")) ?? "";
   } else if (provider === "claude") {
     key = (await storageGet("tabmind:claude:apiKey")) ?? "";

@@ -1,4 +1,4 @@
-export type AiProvider = "gemini" | "openai" | "claude";
+export type AiProvider = "grok" | "claude" | "gemini" | "openai";
 
 export interface TabSnapshot {
   id: number;
@@ -71,6 +71,7 @@ export interface StorageSchema {
   "tabmind:tasks:rollover": string;
   "tabmind:widget:position": { x: number; y: number } | null;
   "tabmind:widget:minimized": boolean;
+  "tabmind:grok:apiKey": string;
   "tabmind:gemini:apiKey": string;
   "tabmind:openai:apiKey": string;
   "tabmind:claude:apiKey": string;
