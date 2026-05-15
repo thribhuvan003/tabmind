@@ -1,4 +1,4 @@
-export type AiProvider = "grok" | "claude" | "gemini" | "openai";
+export type AiProvider = "grok" | "claude" | "gemini" | "openai" | "openrouter" | "cerebras";
 
 export type TaskCategory = "work" | "personal" | "health" | "learning" | "creative";
 export type NoteCategory = "work" | "personal" | "ideas" | "learning";
@@ -95,6 +95,8 @@ export interface StorageSchema {
   "tabmind:gemini:apiKey": string;
   "tabmind:openai:apiKey": string;
   "tabmind:claude:apiKey": string;
+  "tabmind:openrouter:apiKey": string;
+  "tabmind:cerebras:apiKey": string;
   "tabmind:provider": AiProvider;
   "tabmind:blocklist": string[];
   "tabmind:session:startedAt": number;

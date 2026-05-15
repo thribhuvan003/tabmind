@@ -9,6 +9,8 @@ const AREA: Record<Key, "sync" | "local"> = {
   "tabmind:gemini:apiKey": "sync",
   "tabmind:openai:apiKey": "sync",
   "tabmind:claude:apiKey": "sync",
+  "tabmind:openrouter:apiKey": "sync",
+  "tabmind:cerebras:apiKey": "sync",
   "tabmind:provider": "sync",
   "tabmind:blocklist": "sync",
   "tabmind:notes": "sync",
@@ -91,6 +93,10 @@ export async function getActiveApiKey(): Promise<{ provider: AiProvider; key: st
     key = (await storageGet("tabmind:openai:apiKey")) ?? "";
   } else if (provider === "claude") {
     key = (await storageGet("tabmind:claude:apiKey")) ?? "";
+  } else if (provider === "openrouter") {
+    key = (await storageGet("tabmind:openrouter:apiKey")) ?? "";
+  } else if (provider === "cerebras") {
+    key = (await storageGet("tabmind:cerebras:apiKey")) ?? "";
   } else {
     key = (await storageGet("tabmind:gemini:apiKey")) ?? "";
   }

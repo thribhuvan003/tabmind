@@ -117,6 +117,8 @@ export default defineContentScript({
         changes["tabmind:claude:apiKey"] ||
         changes["tabmind:gemini:apiKey"] ||
         changes["tabmind:openai:apiKey"] ||
+        changes["tabmind:openrouter:apiKey"] ||
+        changes["tabmind:cerebras:apiKey"] ||
         changes["tabmind:provider"]
       )) {
         try { useWidgetStore.getState().checkApiKey(); } catch { /* */ }

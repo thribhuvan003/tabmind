@@ -44,7 +44,7 @@ async function snapshotPipeline(): Promise<PipelineResult> {
         friendly = "Rate limit hit (429). Wait a minute and try again, or check your quota at ai.dev/rate-limit.";
       }
     } else if (raw.includes("401") || raw.includes("403") || raw.includes("API_KEY_INVALID")) {
-      friendly = "Invalid API key. Re-check the key in Settings — console.groq.com (Groq), console.anthropic.com (Claude), or aistudio.google.com (Gemini).";
+      friendly = "Invalid API key. Re-check the key in Settings — openrouter.ai/keys (OpenRouter), console.groq.com (Groq), console.anthropic.com (Claude), or aistudio.google.com (Gemini).";
     } else if (raw.includes("404")) {
       friendly = "Model not found (404). Try saving your API key again to trigger a fresh snapshot.";
     }
@@ -69,6 +69,12 @@ async function goalBreakdownPipeline(goalText: string): Promise<{ tasks: string[
     } else if (provider === "gemini") {
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.5, maxOutputTokens: 400, responseMimeType: "application/json" } }) });
       raw = (await r.json())?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+    } else if (provider === "openrouter") {
+      const r = await fetch("https://openrouter.ai/api/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "HTTP-Referer": "https://github.com/thribhuvan003/tabmind", "X-Title": "TabMind" }, body: JSON.stringify({ model: "meta-llama/llama-3.3-70b-instruct:free", temperature: 0.5, max_tokens: 400, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });
+      raw = (await r.json())?.choices?.[0]?.message?.content ?? "{}";
+    } else if (provider === "cerebras") {
+      const r = await fetch("https://api.cerebras.ai/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ model: "llama-3.3-70b", temperature: 0.5, max_tokens: 400, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });
+      raw = (await r.json())?.choices?.[0]?.message?.content ?? "{}";
     } else {
       const r = await fetch("https://api.openai.com/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ model: "gpt-4o-mini", temperature: 0.5, max_tokens: 400, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });
       raw = (await r.json())?.choices?.[0]?.message?.content ?? "{}";

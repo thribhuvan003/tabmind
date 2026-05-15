@@ -107,11 +107,13 @@ const CSS = `
 
 export function Options() {
   const [tab, setTab] = useState<"api" | "blocklist" | "about">("api");
-  const [provider, setProvider] = useState<AiProvider>("grok");
+  const [provider, setProvider] = useState<AiProvider>("openrouter");
   const [grokKey, setGrokKey] = useState("");
   const [claudeKey, setClaudeKey] = useState("");
   const [geminiKey, setGeminiKey] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
+  const [openrouterKey, setOpenrouterKey] = useState("");
+  const [cerebrasKey, setCerebrasKey] = useState("");
   const [saved, setSaved] = useState(false);
   const [blocklist, setBlocklistState] = useState<string[]>([]);
   const [newDomain, setNewDomain] = useState("");
@@ -122,13 +124,17 @@ export function Options() {
       storageGet("tabmind:claude:apiKey"),
       storageGet("tabmind:gemini:apiKey"),
       storageGet("tabmind:openai:apiKey"),
+      storageGet("tabmind:openrouter:apiKey"),
+      storageGet("tabmind:cerebras:apiKey"),
       storageGet("tabmind:provider"),
       getBlocklist(),
-    ]).then(([xk, ck, gk, ok, prov, bl]) => {
+    ]).then(([xk, ck, gk, ok, ork, cbk, prov, bl]) => {
       if (xk) setGrokKey(xk);
       if (ck) setClaudeKey(ck);
       if (gk) setGeminiKey(gk);
       if (ok) setOpenaiKey(ok);
+      if (ork) setOpenrouterKey(ork);
+      if (cbk) setCerebrasKey(cbk);
       if (prov) setProvider(prov);
       setBlocklistState(bl);
     });
@@ -141,6 +147,8 @@ export function Options() {
       storageSet("tabmind:claude:apiKey", claudeKey.trim()),
       storageSet("tabmind:gemini:apiKey", geminiKey.trim()),
       storageSet("tabmind:openai:apiKey", openaiKey.trim()),
+      storageSet("tabmind:openrouter:apiKey", openrouterKey.trim()),
+      storageSet("tabmind:cerebras:apiKey", cerebrasKey.trim()),
     ]);
     chrome.runtime.sendMessage({ type: "TABMIND_SNAPSHOT_NOW" }).catch(() => {});
     setSaved(true);
@@ -151,6 +159,8 @@ export function Options() {
     if (provider === "grok") return !!grokKey.trim();
     if (provider === "claude") return !!claudeKey.trim();
     if (provider === "openai") return !!openaiKey.trim();
+    if (provider === "openrouter") return !!openrouterKey.trim();
+    if (provider === "cerebras") return !!cerebrasKey.trim();
     return !!geminiKey.trim();
   };
 
@@ -160,8 +170,10 @@ export function Options() {
       storageSet("tabmind:claude:apiKey", ""),
       storageSet("tabmind:gemini:apiKey", ""),
       storageSet("tabmind:openai:apiKey", ""),
+      storageSet("tabmind:openrouter:apiKey", ""),
+      storageSet("tabmind:cerebras:apiKey", ""),
     ]);
-    setGrokKey(""); setClaudeKey(""); setGeminiKey(""); setOpenaiKey("");
+    setGrokKey(""); setClaudeKey(""); setGeminiKey(""); setOpenaiKey(""); setOpenrouterKey(""); setCerebrasKey("");
   };
 
   const addDomain = async () => {
@@ -224,6 +236,8 @@ export function Options() {
           <label className="label">Choose provider</label>
           <div className="provider-grid">
             {([
+              { id: "openrouter" as AiProvider, name: "OpenRouter", sub: "Llama 3.3 70B", free: true },
+              { id: "cerebras" as AiProvider, name: "Cerebras", sub: "Llama 3.3 70B", free: true },
               { id: "grok" as AiProvider, name: "Groq", sub: "Llama 3.3 70B", free: true },
               { id: "claude" as AiProvider, name: "Claude", sub: "Haiku 4.5", free: true },
               { id: "gemini" as AiProvider, name: "Gemini", sub: "2.0 Flash", free: true },
@@ -240,6 +254,30 @@ export function Options() {
               </button>
             ))}
           </div>
+
+          {provider === "openrouter" && (
+            <>
+              <label className="label" htmlFor="openrouter-key">OpenRouter API key</label>
+              <input id="openrouter-key" className="input" type="password" value={openrouterKey}
+                onChange={(e) => setOpenrouterKey(e.target.value)} placeholder="sk-or-v1-…" autoComplete="off" />
+              <p className="hint">
+                Key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a>.
+                Uses <strong style={{ color: "#c4b5fd" }}>Llama 3.3 70B</strong> — free tier available, access to 300+ models.
+              </p>
+            </>
+          )}
+
+          {provider === "cerebras" && (
+            <>
+              <label className="label" htmlFor="cerebras-key">Cerebras API key</label>
+              <input id="cerebras-key" className="input" type="password" value={cerebrasKey}
+                onChange={(e) => setCerebrasKey(e.target.value)} placeholder="csk-…" autoComplete="off" />
+              <p className="hint">
+                Key from <a href="https://cloud.cerebras.ai/platform/api-keys" target="_blank" rel="noopener">cloud.cerebras.ai</a>.
+                Uses <strong style={{ color: "#c4b5fd" }}>Llama 3.3 70B</strong> — world's fastest inference, generous free tier.
+              </p>
+            </>
+          )}
 
           {provider === "grok" && (
             <>
@@ -305,7 +343,7 @@ export function Options() {
               </svg>
               Save & analyze now
             </button>
-            {(grokKey || claudeKey || geminiKey || openaiKey) && (
+            {(grokKey || claudeKey || geminiKey || openaiKey || openrouterKey || cerebrasKey) && (
               <button className="btn-danger" onClick={handleClearKeys}>Clear keys</button>
             )}
           </div>
