@@ -1,6 +1,9 @@
 ﻿import ReactDOM from "react-dom/client";
 import { Widget } from "../../components/widget/Widget";
 import { useWidgetStore } from "../../stores/widget.store";
+import { initSentry } from "../../lib/sentry";
+
+initSentry("content");
 
 const MAX_EXCERPT = 2000;
 

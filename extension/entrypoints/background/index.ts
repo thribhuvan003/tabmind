@@ -2,6 +2,9 @@ import { runSessionSnapshot } from "../../lib/session-engine";
 import { storageSet, storageGet, getLatestSession } from "../../lib/storage";
 import { applyTabGroups } from "../../lib/tab-groups";
 import { rolloverOverdueTasks, mergeAiTodos, msUntilMidnight } from "../../lib/tasks";
+import { initSentry, captureError } from "../../lib/sentry";
+
+initSentry("background");
 
 const ALARM_SNAPSHOT = "tabmind:snapshot";
 const ALARM_ROLLOVER = "tabmind:daily-rollover";
@@ -28,7 +31,7 @@ async function snapshotPipeline() {
     await broadcastToAll("TABMIND_SESSION_UPDATED");
     return snap;
   } catch (err) {
-    console.error("[TabMind] snapshot error:", err);
+    captureError(err, { fn: "snapshotPipeline" });
     return null;
   }
 }
@@ -38,7 +41,7 @@ async function doRollover() {
     const count = await rolloverOverdueTasks();
     if (count > 0) await broadcastToAll("TABMIND_TASKS_UPDATED");
   } catch (err) {
-    console.error("[TabMind] rollover error:", err);
+    captureError(err, { fn: "doRollover" });
   }
 }
 
@@ -114,6 +117,11 @@ export default defineBackground(() => {
     }
     if (msg?.type === "TABMIND_GET_LATEST") {
       getLatestSession().then(sendResponse).catch(() => sendResponse(null));
+      return true;
+    }
+    if (msg?.type === "TABMIND_OPEN_OPTIONS") {
+      try { chrome.runtime.openOptionsPage(); } catch { /* ignore */ }
+      sendResponse({ ok: true });
       return true;
     }
     if (msg?.type === "TABMIND_OPEN_WIDGET_ACTIVE") {

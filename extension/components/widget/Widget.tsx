@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useRef, useCallback, useState, Component, type ReactNode } from "react";
 import "./widget.css";
 import { useWidgetStore } from "../../stores/widget.store";
 import type { TabGroup, UserTask, GlobalNote } from "../../lib/types";
@@ -12,10 +12,39 @@ import {
   getSomedayTasks,
   getUpcomingTasks,
 } from "../../lib/tasks";
+import { captureError } from "../../lib/sentry";
 
-const W_WIDTH = 360;
+const W_WIDTH = 400;
 
+/* ── error boundary ─────────────────────────────────────── */
+
+interface EBState { crashed: boolean }
+class ErrorBoundary extends Component<{ children: ReactNode }, EBState> {
+  state: EBState = { crashed: false };
+  componentDidCatch(err: Error) { captureError(err, { context: "Widget" }); }
+  static getDerivedStateFromError() { return { crashed: true }; }
+  render() {
+    if (this.state.crashed) {
+      return (
+        <div style={{
+          padding: "20px 18px", color: "#f87171", fontFamily: "system-ui",
+          fontSize: 12, lineHeight: 1.6, textAlign: "center",
+        }}>
+          <div style={{ marginBottom: 8, fontSize: 20 }}>⚠</div>
+          TabMind ran into an error. Refresh the page to reload.
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+/** Public entry — always wrapped in ErrorBoundary */
 export function Widget() {
+  return <ErrorBoundary><WidgetInner /></ErrorBoundary>;
+}
+
+function WidgetInner() {
   const {
     minimized,
     position,
@@ -247,7 +276,7 @@ function NoApiKeyBanner() {
       <button
         className="tm-btn tm-btn-primary"
         style={{ marginTop: 14, width: "100%" }}
-        onClick={() => chrome.runtime.openOptionsPage?.()}
+        onClick={() => chrome.runtime.sendMessage({ type: "TABMIND_OPEN_OPTIONS" }).catch(() => {})}
         type="button"
       >
         Open Settings ↗
@@ -757,7 +786,11 @@ function Footer({ continueHint, onAsk }: { continueHint: string | null; onAsk: (
       {continueHint && <p className="tm-continue">{continueHint}</p>}
       <div className="tm-actions">
         <button className="tm-btn tm-btn-primary" onClick={onAsk} type="button">Refresh insight</button>
-        <button className="tm-btn tm-btn-ghost" onClick={() => chrome.runtime.openOptionsPage?.()} type="button">
+        <button
+          className="tm-btn tm-btn-ghost"
+          onClick={() => chrome.runtime.sendMessage({ type: "TABMIND_OPEN_OPTIONS" }).catch(() => {})}
+          type="button"
+        >
           Settings ↗
         </button>
       </div>
