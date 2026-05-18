@@ -77,12 +77,13 @@ export default defineContentScript({
   cssInjectionMode: "ui",
   async main(ctx) {
     // Page-excerpt provider for the background snapshot pipeline.
-    chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    const excerptListener = (msg: { type?: string }, _sender: chrome.runtime.MessageSender, sendResponse: (r: unknown) => void) => {
       if (msg?.type === "TABMIND_GET_EXCERPT") {
         sendResponse({ text: getPageExcerpt() });
-        return;
       }
-    });
+    };
+    chrome.runtime.onMessage.addListener(excerptListener);
+    ctx.onInvalidated(() => chrome.runtime.onMessage.removeListener(excerptListener));
 
     const ui = await createShadowRootUi(ctx, {
       name: "tabmind-widget",

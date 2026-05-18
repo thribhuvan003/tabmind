@@ -186,7 +186,7 @@ export function Options() {
       storageSet("tabmind:openrouter:apiKey", ""),
       storageSet("tabmind:cerebras:apiKey", ""),
     ]);
-    setGrokKey(""); setClaudeKey(""); setGeminiKey(""); setOpenaiKey(""); setOpenrouterKey(""); setCerebrasKey("");
+    setGrokKey(""); setClaudeKey(""); setGeminiKey(""); setOpenaiKey(""); setOpenrouterKey(""); setCerebrasKey(""); setPasteKey("");
   };
 
   const addDomain = async () => {
@@ -320,7 +320,7 @@ export function Options() {
                 onChange={(e) => setGrokKey(e.target.value)} placeholder="xai-... or gsk_..." autoComplete="off" />
               <p className="hint">
                 Use an xAI key from <a href="https://console.x.ai" target="_blank" rel="noopener">console.x.ai</a> or a Groq key from <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com</a>.
-                xAI uses <strong style={{ color: "#c4b5fd" }}>grok-4.3</strong>; Groq uses <strong style={{ color: "#c4b5fd" }}>Llama 3.3 70B</strong>.
+                xAI uses <strong style={{ color: "#c4b5fd" }}>grok-2-latest</strong>; Groq uses <strong style={{ color: "#c4b5fd" }}>Llama 3.3 70B</strong>.
               </p>
             </>
           )}
@@ -423,7 +423,7 @@ export function Options() {
             ["Snapshot interval", "90 seconds"],
             ["History kept", "50 sessions"],
             ["Session reset", "5 min idle"],
-            ["Notes storage", "chrome.storage.sync"],
+            ["Notes storage", "chrome.storage.local"],
             ["Keys storage", "chrome.storage.sync (encrypted by Chrome)"],
             ["Snapshots storage", "chrome.storage.local"],
             ["Tab grouping", "automatic, via chrome.tabGroups"],

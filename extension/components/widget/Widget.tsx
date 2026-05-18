@@ -124,7 +124,10 @@ function WidgetInner() {
     window.addEventListener("resize", onResize);
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") useWidgetStore.getState().setMinimized(true);
+      if (e.key !== "Escape") return;
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement).isContentEditable) return;
+      useWidgetStore.getState().setMinimized(true);
     };
     document.addEventListener("keydown", onKeyDown);
 
@@ -166,11 +169,13 @@ function WidgetInner() {
   const minutes = session ? Math.max(1, Math.round(session.durationMs / 60_000)) : 0;
   const groups = session?.groups ?? [];
   const noteText = note?.text ?? "";
-  const todayPending = getTodayTasks(tasks).filter(t => t.status === "pending").length;
+  const todayPendingCount = useMemo(
+    () => getTodayTasks(tasks).filter(t => t.status === "pending").length,
+    [tasks],
+  );
 
   // -- Minimized orb (draggable, click to expand) ----------
   if (minimized) {
-    const pendingCount = getTodayTasks(tasks).length;
     return (
       <div
         className="tm-orb"
@@ -215,9 +220,9 @@ function WidgetInner() {
       >
         <Mark size={20} />
         {loading && <span className="tm-orb-pulse" />}
-        {pendingCount > 0 && (
-          <span className="tm-orb-badge" aria-label={`${pendingCount} pending tasks`}>
-            {pendingCount > 9 ? "9+" : pendingCount}
+        {todayPendingCount > 0 && (
+          <span className="tm-orb-badge" aria-label={`${todayPendingCount} pending tasks`}>
+            {todayPendingCount > 9 ? "9+" : todayPendingCount}
           </span>
         )}
       </div>
@@ -245,7 +250,7 @@ function WidgetInner() {
         </div>
 
         {/* tab navigation */}
-        <TabNav activeTab={activeTab} onTab={setActiveTab} todayCount={todayPending} />
+        <TabNav activeTab={activeTab} onTab={setActiveTab} todayCount={todayPendingCount} />
 
         <div className="tm-scroll">
           {/* no-key state */}
@@ -380,6 +385,13 @@ function TodayTab({
   const [catFilter, setCatFilter] = useState<TaskCategory | "all">("all");
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [showSomeday, setShowSomeday] = useState(false);
+
+  useEffect(() => {
+    if (!openMenu) return;
+    const close = () => setOpenMenu(null);
+    const id = window.setTimeout(() => document.addEventListener("click", close, { once: true }), 0);
+    return () => { window.clearTimeout(id); document.removeEventListener("click", close); };
+  }, [openMenu]);
 
   const todayTasks = useMemo(() => getTodayTasks(tasks), [tasks]);
   const somedayTasks = useMemo(() => getSomedayTasks(tasks), [tasks]);
@@ -524,8 +536,8 @@ function getWeekDays(): Date[] {
 }
 
 function WeekStrip({ tasks }: { tasks: UserTask[] }) {
-  const days = useMemo(() => getWeekDays(), []);
   const todayStr = todayISO();
+  const days = useMemo(() => getWeekDays(), [todayStr]);
   const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   return (
@@ -569,16 +581,22 @@ function QuickAddTask({
   const [text, setText] = useState("");
   const [category, setCategory] = useState<TaskCategory | null>(null);
   const [estMins, setEstMins] = useState<number | null>(null);
+  const [adding, setAdding] = useState(false);
 
   const TIME_OPTIONS = [15, 30, 60, 90];
 
   const handleAdd = async () => {
     const trimmed = text.trim();
-    if (!trimmed) return;
-    await onAdd(trimmed, todayISO(), category ?? undefined, estMins ?? undefined);
-    setText("");
-    setCategory(null);
-    setEstMins(null);
+    if (!trimmed || adding) return;
+    setAdding(true);
+    try {
+      await onAdd(trimmed, todayISO(), category ?? undefined, estMins ?? undefined);
+      setText("");
+      setCategory(null);
+      setEstMins(null);
+    } finally {
+      setAdding(false);
+    }
   };
 
   return (
@@ -588,6 +606,7 @@ function QuickAddTask({
           className="tm-qadd-input"
           placeholder="+ Add a task..."
           value={text}
+          disabled={adding}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") handleAdd();
@@ -595,7 +614,7 @@ function QuickAddTask({
           }}
         />
         {text.trim() && (
-          <button className="tm-add-send" onClick={handleAdd} title="Add task (Enter)" type="button">
+          <button className="tm-add-send" onClick={handleAdd} title="Add task (Enter)" type="button" disabled={adding}>
             <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
               <path d="M8 2v12M2 8l6-6 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -644,7 +663,7 @@ function NotesTab({
   noteText: string;
   onSavePageNote: (text: string) => void;
   globalNotes: GlobalNote[];
-  onAddGlobalNote: (text: string) => Promise<void>;
+  onAddGlobalNote: (text: string, category?: NoteCategory) => Promise<void>;
   onDeleteGlobalNote: (id: string) => Promise<void>;
   onPinGlobalNote: (id: string, pinned: boolean) => Promise<void>;
 }) {
@@ -655,7 +674,7 @@ function NotesTab({
   const handleAdd = async () => {
     const trimmed = draft.trim();
     if (!trimmed) return;
-    await onAddGlobalNote(trimmed);
+    await onAddGlobalNote(trimmed, newNoteCategory ?? undefined);
     setDraft("");
     setNewNoteCategory(null);
   };
@@ -851,9 +870,8 @@ function GoalsTab({
         // But we need the goal id - we can find it from the goals list after add
         // Instead, we pass the tasks and let the store handle the goal lookup
         // Re-fetch goals via the store
-        const updatedGoals = await chrome.storage.local.get("tabmind:goals");
-        const goalsList: Goal[] = updatedGoals["tabmind:goals"] ?? [];
-        const newGoal = goalsList[0]; // just added, should be first
+        const goalsList: Goal[] = useWidgetStore.getState().goals;
+        const newGoal = goalsList[0]; // just added by onAddGoal, store is already updated
         if (newGoal) {
           const goalTasks = taskTexts.map((text) => ({
             id: crypto.randomUUID(),
@@ -1124,7 +1142,10 @@ function NoteEditor({ value, onSave }: { value: string; onSave: (t: string) => v
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const debRef = useRef<number | null>(null);
 
-  useEffect(() => setText(value), [value]);
+  useEffect(() => {
+    if (debRef.current) window.clearTimeout(debRef.current);
+    setText(value);
+  }, [value]);
 
   const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const v = e.target.value;
@@ -1322,8 +1343,10 @@ function Section({
       <div
         className="tm-section-head"
         onClick={collapsible ? () => setOpen((v) => !v) : undefined}
+        onKeyDown={collapsible ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen((v) => !v); } } : undefined}
         style={collapsible ? { cursor: "pointer", userSelect: "none" } : undefined}
         role={collapsible ? "button" : undefined}
+        tabIndex={collapsible ? 0 : undefined}
         aria-expanded={collapsible ? open : undefined}
       >
         <span className="tm-eyebrow">{label}</span>

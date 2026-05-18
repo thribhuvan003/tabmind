@@ -123,12 +123,13 @@ export async function getGlobalNotes(): Promise<GlobalNote[]> {
   return (await storageGet("tabmind:notes:global")) ?? [];
 }
 
-export async function addGlobalNote(text: string): Promise<GlobalNote> {
+export async function addGlobalNote(text: string, category?: GlobalNote["category"]): Promise<GlobalNote> {
   const note: GlobalNote = {
     id: crypto.randomUUID(),
     text: text.trim(),
     createdAt: Date.now(),
     pinned: false,
+    ...(category ? { category } : {}),
   };
   const notes = await getGlobalNotes();
   const updated = [note, ...notes].slice(0, GLOBAL_NOTES_CAP);

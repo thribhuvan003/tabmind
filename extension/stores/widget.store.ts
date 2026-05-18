@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { SessionSnapshot, UrlNote, UserTask, GlobalNote, Goal, TaskCategory } from "../lib/types";
+import type { SessionSnapshot, UrlNote, UserTask, GlobalNote, Goal, TaskCategory, NoteCategory } from "../lib/types";
 
 /** Retry chrome.runtime.sendMessage up to 3 times - MV3 service workers go to sleep. */
 async function sendMsg(msg: object, retries = 3): Promise<unknown> {
@@ -75,7 +75,7 @@ interface WidgetState {
   completeTask: (id: string) => Promise<void>;
   scheduleTask: (id: string, dueDate: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
-  addGlobalNote: (text: string) => Promise<void>;
+  addGlobalNote: (text: string, category?: NoteCategory) => Promise<void>;
   deleteGlobalNote: (id: string) => Promise<void>;
   pinGlobalNote: (id: string, pinned: boolean) => Promise<void>;
   loadGoals: () => Promise<void>;
@@ -225,8 +225,8 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
     await get().loadTasks();
   },
 
-  addGlobalNote: async (text) => {
-    await dbAddGlobalNote(text);
+  addGlobalNote: async (text, category) => {
+    await dbAddGlobalNote(text, category);
     const globalNotes = await getGlobalNotes();
     set({ globalNotes });
   },
