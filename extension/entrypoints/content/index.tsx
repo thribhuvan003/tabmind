@@ -111,7 +111,7 @@ export default defineContentScript({
     });
 
     // Re-detect API key when user saves it in Settings (storage change from options page).
-    chrome.storage.onChanged.addListener((changes, area) => {
+    const storageListener = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
       if (area === "sync" && (
         changes["tabmind:grok:apiKey"] ||
         changes["tabmind:claude:apiKey"] ||
@@ -123,10 +123,12 @@ export default defineContentScript({
       )) {
         try { useWidgetStore.getState().checkApiKey(); } catch { /* */ }
       }
-    });
+    };
+    chrome.storage.onChanged.addListener(storageListener);
+    ctx.onInvalidated(() => chrome.storage.onChanged.removeListener(storageListener));
 
     // Popup -> "open widget here" + Cmd+Shift+K toggle + session updates.
-    chrome.runtime.onMessage.addListener((msg) => {
+    const msgListener = (msg: { type?: string }) => {
       try {
         const s = useWidgetStore.getState();
         if (msg?.type === "TABMIND_OPEN_WIDGET") {
@@ -143,6 +145,8 @@ export default defineContentScript({
       } catch {
         /* */
       }
-    });
+    };
+    chrome.runtime.onMessage.addListener(msgListener);
+    ctx.onInvalidated(() => chrome.runtime.onMessage.removeListener(msgListener));
   },
 });

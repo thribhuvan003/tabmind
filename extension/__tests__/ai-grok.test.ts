@@ -45,7 +45,7 @@ describe("grokAdapter", () => {
     await grokAdapter.analyze([], 15, "xai-test-key");
 
     const body = JSON.parse(String(vi.mocked(fetch).mock.calls[0][1]?.body));
-    expect(body.model).toBe("grok-4.3");
+    expect(body.model).toBe("grok-2-latest");
     expect(body.response_format).toEqual({ type: "json_object" });
   });
 

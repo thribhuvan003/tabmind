@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState, Component, type ReactNode } from "react";
+import { useEffect, useRef, useCallback, useState, useMemo, Component, type ReactNode } from "react";
 import "./widget.css";
 import { useWidgetStore } from "../../stores/widget.store";
 import type { TabGroup, UserTask, GlobalNote, Goal, TaskCategory, NoteCategory } from "../../lib/types";
@@ -75,6 +75,7 @@ function WidgetInner() {
     goals,
     error,
     setPosition,
+    persistPosition,
     setMinimized,
     loadSession,
     loadNote,
@@ -122,9 +123,15 @@ function WidgetInner() {
     const onResize = () => setPosition(posRef.current);
     window.addEventListener("resize", onResize);
 
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") useWidgetStore.getState().setMinimized(true);
+    };
+    document.addEventListener("keydown", onKeyDown);
+
     return () => {
       chrome.runtime.onMessage.removeListener(onMsg);
       window.removeEventListener("resize", onResize);
+      document.removeEventListener("keydown", onKeyDown);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -153,7 +160,8 @@ function WidgetInner() {
   const onPointerUp = useCallback(() => {
     dragging.current = false;
     setIsDragging(false);
-  }, []);
+    persistPosition();
+  }, [persistPosition]);
 
   const minutes = session ? Math.max(1, Math.round(session.durationMs / 60_000)) : 0;
   const groups = session?.groups ?? [];
@@ -197,6 +205,7 @@ function WidgetInner() {
         onPointerUp={() => {
           dragging.current = false;
           if (!orbMoved.current) setMinimized(false);
+          else persistPosition();
           orbMoved.current = false;
         }}
         onPointerCancel={() => {
@@ -372,13 +381,13 @@ function TodayTab({
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [showSomeday, setShowSomeday] = useState(false);
 
-  const todayTasks = getTodayTasks(tasks);
-  const somedayTasks = getSomedayTasks(tasks);
-  const upcomingTasks = getUpcomingTasks(tasks);
-
-  const filteredToday = catFilter === "all"
-    ? todayTasks
-    : todayTasks.filter(t => t.category === catFilter);
+  const todayTasks = useMemo(() => getTodayTasks(tasks), [tasks]);
+  const somedayTasks = useMemo(() => getSomedayTasks(tasks), [tasks]);
+  const upcomingTasks = useMemo(() => getUpcomingTasks(tasks), [tasks]);
+  const filteredToday = useMemo(
+    () => catFilter === "all" ? todayTasks : todayTasks.filter(t => t.category === catFilter),
+    [todayTasks, catFilter]
+  );
 
   const closeMenu = () => setOpenMenu(null);
 
@@ -515,7 +524,7 @@ function getWeekDays(): Date[] {
 }
 
 function WeekStrip({ tasks }: { tasks: UserTask[] }) {
-  const days = getWeekDays();
+  const days = useMemo(() => getWeekDays(), []);
   const todayStr = todayISO();
   const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 

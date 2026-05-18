@@ -16,7 +16,7 @@ export const grokAdapter: AiAdapter = {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: isXaiKey ? "grok-4.3" : "llama-3.3-70b-versatile",
+        model: isXaiKey ? "grok-2-latest" : "llama-3.3-70b-versatile",
         temperature: 0.25,
         max_tokens: 1024,
         response_format: { type: "json_object" },

@@ -13,7 +13,7 @@ const AREA: Record<Key, "sync" | "local"> = {
   "tabmind:cerebras:apiKey": "sync",
   "tabmind:provider": "sync",
   "tabmind:blocklist": "sync",
-  "tabmind:notes": "sync",
+  "tabmind:notes": "local",
   "tabmind:session:latest": "local",
   "tabmind:session:history": "local",
   "tabmind:tasks": "local",
@@ -186,6 +186,20 @@ export async function deleteGoal(id: string): Promise<void> {
 }
 
 /* --- url helpers ---------------------------------------- */
+
+/* --- one-time migration: move per-URL notes from sync to local --- */
+export async function migrateNotesIfNeeded(): Promise<void> {
+  try {
+    const done = await chrome.storage.local.get("tabmind:migration:notes-v1");
+    if (done["tabmind:migration:notes-v1"]) return;
+    const syncData = await chrome.storage.sync.get("tabmind:notes");
+    if (syncData["tabmind:notes"]) {
+      await chrome.storage.local.set({ "tabmind:notes": syncData["tabmind:notes"] });
+      await chrome.storage.sync.remove("tabmind:notes");
+    }
+    await chrome.storage.local.set({ "tabmind:migration:notes-v1": true });
+  } catch { /* best-effort */ }
+}
 
 export function normalizeUrl(raw: string): string {
   try {

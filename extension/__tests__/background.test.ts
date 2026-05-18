@@ -38,6 +38,7 @@ vi.mock("../lib/storage", () => ({
   storageGet: vi.fn().mockResolvedValue(undefined),
   getLatestSession: vi.fn().mockResolvedValue(null),
   getActiveApiKey: vi.fn().mockResolvedValue({ provider: "gemini", key: "test-key" }),
+  migrateNotesIfNeeded: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("../lib/tab-groups", () => ({

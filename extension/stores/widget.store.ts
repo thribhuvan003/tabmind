@@ -64,6 +64,7 @@ interface WidgetState {
   /* actions */
   setMinimized: (v: boolean) => void;
   setPosition: (pos: { x: number; y: number }) => void;
+  persistPosition: () => void;
   loadSession: () => Promise<void>;
   loadNote: (url: string) => Promise<void>;
   saveNote: (text: string) => Promise<void>;
@@ -84,15 +85,16 @@ interface WidgetState {
   toggleGoalTask: (goalId: string, taskId: string) => Promise<void>;
 }
 
+const W_WIDTH = 420;
 const DEFAULT_POS = () => ({
-  x: typeof window !== "undefined" ? Math.max(0, window.innerWidth - 380) : 24,
+  x: typeof window !== "undefined" ? Math.max(8, window.innerWidth - W_WIDTH - 20) : 24,
   y: 96,
 });
 
 function clampToViewport(pos: { x: number; y: number }) {
   if (typeof window === "undefined") return pos;
   return {
-    x: Math.max(8, Math.min(window.innerWidth - 368, pos.x)),
+    x: Math.max(8, Math.min(window.innerWidth - W_WIDTH - 8, pos.x)),
     y: Math.max(8, Math.min(window.innerHeight - 88, pos.y)),
   };
 }
@@ -120,7 +122,10 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
   setPosition: (pos) => {
     const clamped = clampToViewport(pos);
     set({ position: clamped });
-    storageSet("tabmind:widget:position", clamped).catch(() => {});
+  },
+
+  persistPosition: () => {
+    storageSet("tabmind:widget:position", get().position).catch(() => {});
   },
 
   loadSession: async () => {
@@ -142,6 +147,7 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
   },
 
   requestSnapshot: async () => {
+    if (get().loading) return;
     set({ loading: true, error: null });
     try {
       const res = await sendMsg({ type: "TABMIND_SNAPSHOT_NOW" }) as { snapshot: SessionSnapshot | null; error?: string } | null;

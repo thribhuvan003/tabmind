@@ -31,13 +31,13 @@ beforeEach(() => {
 });
 
 describe("storage routing", () => {
-  it("stores URL notes in chrome.storage.sync", async () => {
+  it("stores URL notes in chrome.storage.local", async () => {
     const { setNote, getNote } = await import("../lib/storage");
 
     await setNote("example.com/article", "Important source");
 
-    expect(syncArea.set).toHaveBeenCalled();
-    expect(localArea.set).not.toHaveBeenCalled();
+    expect(localArea.set).toHaveBeenCalled();
+    expect(syncArea.set).not.toHaveBeenCalled();
     await expect(getNote("example.com/article")).resolves.toMatchObject({
       text: "Important source",
     });

@@ -4,7 +4,6 @@ import type { AiProvider } from "../../lib/types";
 import { DEFAULT_BLOCKLIST } from "../../lib/types";
 
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: "Geist", "Inter", system-ui, sans-serif;
@@ -115,9 +114,12 @@ export function Options() {
   const [openrouterKey, setOpenrouterKey] = useState("");
   const [cerebrasKey, setCerebrasKey] = useState("");
   const [saved, setSaved] = useState(false);
+  const [pasteKey, setPasteKey] = useState("");
+  const [showKeys, setShowKeys] = useState(false);
 
   // Auto-detect provider from key prefix as user types
   const autoDetect = (key: string) => {
+    setPasteKey(key);
     const k = key.trim();
     if (k.startsWith("sk-or-v1-")) { setOpenrouterKey(k); setProvider("openrouter"); }
     else if (k.startsWith("csk-")) { setCerebrasKey(k); setProvider("cerebras"); }
@@ -245,13 +247,22 @@ export function Options() {
           <div className="card-title">AI Provider</div>
 
           <label className="label">Paste any API key - provider auto-detected</label>
-          <input
-            className="input"
-            type="password"
-            placeholder="Paste key: xai-... / gsk_... / sk-or-v1-... / csk-... / sk-ant-... / AIzaSy... / sk-..."
-            autoComplete="off"
-            onChange={(e) => autoDetect(e.target.value)}
-          />
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              className="input"
+              type={showKeys ? "text" : "password"}
+              placeholder="Paste key: xai-... / gsk_... / sk-or-v1-... / csk-... / sk-ant-... / AIzaSy... / sk-..."
+              autoComplete="off"
+              value={pasteKey}
+              onChange={(e) => autoDetect(e.target.value)}
+              style={{ flex: 1 }}
+            />
+            <button type="button" onClick={() => setShowKeys(v => !v)}
+              title={showKeys ? "Hide key" : "Show key"}
+              style={{ flexShrink: 0, padding: "0 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "#6b6f7d", cursor: "pointer" }}>
+              {showKeys ? "Hide" : "Show"}
+            </button>
+          </div>
           <p className="hint" style={{ marginBottom: 20 }}>
             Key prefix is recognized automatically. Active: <strong style={{ color: "#a78bfa" }}>{provider}</strong>
           </p>

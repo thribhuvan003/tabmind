@@ -1,5 +1,5 @@
 import { runSessionSnapshot } from "../../lib/session-engine";
-import { storageSet, storageGet, getLatestSession, getActiveApiKey } from "../../lib/storage";
+import { storageSet, storageGet, getLatestSession, getActiveApiKey, migrateNotesIfNeeded } from "../../lib/storage";
 import { applyTabGroups } from "../../lib/tab-groups";
 import { rolloverOverdueTasks, mergeAiTodos, msUntilMidnight } from "../../lib/tasks";
 import { initSentry, captureError } from "../../lib/sentry";
@@ -76,7 +76,7 @@ async function goalBreakdownPipeline(goalText: string): Promise<{ tasks: string[
     let raw = "{}";
     if (provider === "grok") {
       const isXaiKey = key.startsWith("xai-");
-      const r = await fetch(isXaiKey ? "https://api.x.ai/v1/chat/completions" : "https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ model: isXaiKey ? "grok-4.3" : "llama-3.3-70b-versatile", temperature: 0.5, max_tokens: 400, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });
+      const r = await fetch(isXaiKey ? "https://api.x.ai/v1/chat/completions" : "https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ model: isXaiKey ? "grok-2-latest" : "llama-3.3-70b-versatile", temperature: 0.5, max_tokens: 400, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });
       raw = (await r.json())?.choices?.[0]?.message?.content ?? "{}";
     } else if (provider === "claude") {
       const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" }, body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 400, messages: [{ role: "user", content: prompt }] }) });
@@ -134,6 +134,7 @@ async function ensureSessionStart() {
 
 export default defineBackground(() => {
   chrome.runtime.onInstalled.addListener(async () => {
+    await migrateNotesIfNeeded();
     await storageSet("tabmind:session:startedAt", Date.now());
     chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: SNAPSHOT_INTERVAL_MINUTES });
     scheduleRolloverAlarm();

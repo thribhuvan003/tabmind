@@ -3,7 +3,6 @@ import { getLatestSession, getActiveApiKey } from "../../lib/storage";
 import type { SessionSnapshot } from "../../lib/types";
 
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: "Geist", "Inter", system-ui, sans-serif;
@@ -64,6 +63,9 @@ export function Popup() {
     ]).then(([s, activeKey]) => {
       setSession(s);
       setHasKey(Boolean(activeKey.key));
+    }).catch(() => {
+      setSession(null);
+      setHasKey(false);
     });
   }, []);
 

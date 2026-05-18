@@ -8,7 +8,6 @@ import type { SessionSnapshot, GlobalNote, Goal, UserTask } from "../../lib/type
 import { todayISO, getTasks as getStoredTasks } from "../../lib/tasks";
 
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: "Geist", "Inter", system-ui, sans-serif;
@@ -481,7 +480,10 @@ export function Dashboard() {
             <div
               key={s.id}
               className={`db-session-item${activeSession?.id === s.id ? " active" : ""}`}
+              role="button"
+              tabIndex={0}
               onClick={() => setActiveSession(s)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setActiveSession(s)}
             >
               <span className="db-session-topic">
                 {s.topic || s.summary || "Unnamed session"}
@@ -578,7 +580,7 @@ export function Dashboard() {
                 <p className="db-narrative-text">
                   {activeSession.narrative || activeSession.summary || "No narrative available."}
                 </p>
-                {activeSession.todos.length > 0 && (
+                {(activeSession.todos?.length ?? 0) > 0 && (
                   <div style={{ marginTop: 12 }}>
                     <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--c-text-muted)", marginBottom: 6 }}>
                       Extracted tasks
