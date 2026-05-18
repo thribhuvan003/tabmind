@@ -26,7 +26,7 @@ export function initSentry(context: "content" | "background") {
     ready = true;
     console.info(`[TabMind] Sentry active (${context})`);
   } catch {
-    /* Sentry init failed — fail silently */
+    /* Sentry init failed - fail silently */
   }
 }
 

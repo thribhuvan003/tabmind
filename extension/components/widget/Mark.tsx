@@ -1,5 +1,5 @@
 /**
- * TabMind brand mark — orbit + central node, not a brain emoji.
+ * TabMind brand mark - orbit + central node, not a brain emoji.
  * Pure SVG so it stays crisp at any size and we don't ship an emoji.
  */
 export function Mark({ size = 18 }: { size?: number }) {

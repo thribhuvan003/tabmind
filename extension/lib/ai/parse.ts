@@ -1,7 +1,7 @@
 import type { AiResult } from "./types";
 import type { ExtractedTodo, TabGroup } from "../types";
 
-/** Robust JSON parser — strips fences, coerces shape, never throws. */
+/** Robust JSON parser - strips fences, coerces shape, never throws. */
 export function parseAiJson(raw: string): AiResult {
   const cleaned = raw
     .replace(/^```(?:json)?/i, "")

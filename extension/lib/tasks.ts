@@ -1,9 +1,9 @@
 /**
- * Task management — Tweek-style scheduling with daily rollover.
+ * Task management - Tweek-style scheduling with daily rollover.
  *
  * Scheduling model:
- *   dueDate = "YYYY-MM-DD"  → appears on that specific day
- *   dueDate = "someday"     → no date, lives in the Someday bucket
+ *   dueDate = "YYYY-MM-DD"  -> appears on that specific day
+ *   dueDate = "someday"     -> no date, lives in the Someday bucket
  *
  * Rollover: any pending task with dueDate < todayISO() automatically
  * gets its dueDate updated to today and receives a rolledOverFrom stamp.
@@ -12,7 +12,7 @@
 import { storageGet, storageSet } from "./storage";
 import type { UserTask, ExtractedTodo } from "./types";
 
-/* ── date utils ──────────────────────────────────────────── */
+/* -- date utils -------------------------------------------- */
 
 export function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
@@ -40,7 +40,7 @@ export function msUntilMidnight(): number {
   return midnight.getTime() - now.getTime();
 }
 
-/* ── crud ────────────────────────────────────────────────── */
+/* -- crud -------------------------------------------------- */
 
 export async function getTasks(): Promise<UserTask[]> {
   return (await storageGet("tabmind:tasks")) ?? [];
@@ -84,18 +84,18 @@ export async function completeTask(id: string): Promise<void> {
   await updateTask(id, { status: "done", completedAt: Date.now() });
 }
 
-/* ── rollover ────────────────────────────────────────────── */
+/* -- rollover ---------------------------------------------- */
 
 /**
  * Move any pending tasks with dueDate < today to today.
  * Returns the number of tasks rolled over.
- * Idempotent — safe to call multiple times per day.
+ * Idempotent - safe to call multiple times per day.
  */
 export async function rolloverOverdueTasks(): Promise<number> {
   const today = todayISO();
   const lastRollover = (await storageGet("tabmind:tasks:rollover")) ?? "";
 
-  // Already ran today — skip.
+  // Already ran today - skip.
   if (lastRollover === today) return 0;
 
   const tasks = await getTasks();
@@ -118,7 +118,7 @@ export async function rolloverOverdueTasks(): Promise<number> {
   return count;
 }
 
-/* ── ai merge ─────────────────────────────────────────────── */
+/* -- ai merge ----------------------------------------------- */
 
 /**
  * Add AI-extracted todos to the task list, deduplicating by text.
@@ -153,7 +153,7 @@ export async function mergeAiTodos(todos: ExtractedTodo[]): Promise<void> {
   }
 }
 
-/* ── view helpers ─────────────────────────────────────────── */
+/* -- view helpers ------------------------------------------- */
 
 export function getTodayTasks(tasks: UserTask[]): UserTask[] {
   const today = todayISO();

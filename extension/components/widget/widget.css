@@ -1,6 +1,6 @@
-/* TabMind — Superhuman-grade frosted glass widget */
+/* TabMind - Superhuman-grade frosted glass widget */
 
-/* ── design tokens ────────────────────────────────────────── */
+/* -- design tokens ------------------------------------------ */
 :host, .tm-widget, .tm-orb {
   --c-glass:       rgba(12, 12, 16, 0.76);
   --c-border:      rgba(255, 255, 255, 0.065);
@@ -50,7 +50,7 @@
 }
 .tm-widget *, .tm-orb * { box-sizing: border-box; }
 
-/* ── glass shell ─────────────────────────────────────────── */
+/* -- glass shell ------------------------------------------- */
 .tm-glass {
   background: var(--c-glass);
   backdrop-filter: blur(44px) saturate(190%) brightness(0.96);
@@ -78,7 +78,7 @@
   to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
 
-/* ── scrollable body ─────────────────────────────────────── */
+/* -- scrollable body --------------------------------------- */
 .tm-scroll {
   max-height: 72vh;
   overflow-y: auto;
@@ -89,7 +89,7 @@
 .tm-scroll::-webkit-scrollbar-track { background: transparent; }
 .tm-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.09); border-radius: 4px; }
 
-/* ── grip / header ───────────────────────────────────────── */
+/* -- grip / header ----------------------------------------- */
 .tm-grip { cursor: grab; user-select: none; }
 .tm-widget[data-dragging] .tm-grip { cursor: grabbing; }
 
@@ -124,7 +124,7 @@
 .tm-icon-btn[data-spinning] svg { animation: tm-spin 800ms linear infinite; }
 @keyframes tm-spin { to { transform: rotate(360deg); } }
 
-/* ── session ─────────────────────────────────────────────── */
+/* -- session ----------------------------------------------- */
 .tm-session { padding: 18px 20px 20px; }
 .tm-meta {
   display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
@@ -161,7 +161,7 @@
 }
 .tm-narrative-empty { color: var(--c-text-muted); font-style: italic; font-size: 12.5px; }
 
-/* ── sections ────────────────────────────────────────────── */
+/* -- sections ---------------------------------------------- */
 .tm-section { padding: 14px 20px; border-top: 1px solid var(--c-border); }
 .tm-section-head {
   display: flex; align-items: center; justify-content: space-between;
@@ -169,7 +169,7 @@
 }
 .tm-hint { font-size: 10.5px; color: var(--c-text-trace); letter-spacing: 0.02em; }
 
-/* ── note editor ─────────────────────────────────────────── */
+/* -- note editor ------------------------------------------- */
 .tm-note-wrap { position: relative; }
 .tm-note {
   width: 100%; min-height: 54px; resize: vertical;
@@ -197,7 +197,7 @@
   100% { opacity: 0; }
 }
 
-/* ── task panel ──────────────────────────────────────────── */
+/* -- task panel -------------------------------------------- */
 .tm-task-count {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 18px; height: 16px; padding: 0 5px;
@@ -290,7 +290,7 @@
   font-size: 9px; color: var(--c-accent); flex-shrink: 0; opacity: 0.6;
 }
 
-/* ··· menu */
+/* --- menu */
 .tm-task-menu-wrap { position: relative; flex-shrink: 0; }
 .tm-task-menu-btn {
   width: 24px; height: 24px; border-radius: var(--r-sm);
@@ -418,7 +418,7 @@
 }
 .tm-someday-arrow[data-open] { transform: rotate(180deg); }
 
-/* ── groups ──────────────────────────────────────────────── */
+/* -- groups ------------------------------------------------ */
 .tm-groups {
   list-style: none; padding: 0; margin: 0;
   display: flex; flex-direction: column; gap: 4px;
@@ -436,7 +436,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── footer ──────────────────────────────────────────────── */
+/* -- footer ------------------------------------------------ */
 .tm-footer { padding: 14px 20px 18px; border-top: 1px solid var(--c-border); }
 .tm-continue {
   font-size: 11.5px; line-height: 1.5; color: var(--c-text-muted);
@@ -474,7 +474,7 @@
 .tm-btn-ghost:hover { background: rgba(255,255,255,0.075); color: var(--c-text); }
 .tm-btn:focus-visible { outline: 2px solid var(--c-accent-line); outline-offset: 2px; }
 
-/* ── minimized orb ───────────────────────────────────────── */
+/* -- minimized orb ----------------------------------------- */
 .tm-orb {
   position: fixed; width: 44px; height: 44px; border-radius: 50%;
   background: var(--c-accent-deep);
@@ -505,7 +505,7 @@
   100% { transform: scale(1.35); opacity: 0; }
 }
 
-/* ── accessibility ───────────────────────────────────────── */
+/* -- accessibility ----------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -513,7 +513,7 @@
   }
 }
 
-/* ── no-api-key empty state ──────────────────────────────── */
+/* -- no-api-key empty state -------------------------------- */
 .tm-no-key {
   padding: 24px 18px 20px;
   display: flex; flex-direction: column; align-items: center;
@@ -537,7 +537,7 @@
   letter-spacing: -0.004em; max-width: 260px; margin: 0 0 4px;
 }
 
-/* ── orb badge ───────────────────────────────────────────── */
+/* -- orb badge --------------------------------------------- */
 .tm-orb-badge {
   position: absolute;
   top: -4px; right: -4px;
@@ -556,7 +556,7 @@
   animation: tm-rise 240ms var(--ease-expo) both;
 }
 
-/* ── collapsible section arrow ───────────────────────────── */
+/* -- collapsible section arrow ----------------------------- */
 .tm-section-arrow {
   transition: transform 200ms var(--ease-expo);
   color: var(--c-text-trace);
@@ -564,7 +564,7 @@
 }
 .tm-section-arrow[data-open] { transform: rotate(180deg); }
 
-/* ── quick notes (Noto-inspired) ─────────────────────────── */
+/* -- quick notes (Noto-inspired) --------------------------- */
 .tm-qn-input-wrap { margin-bottom: 10px; }
 
 .tm-qn-input {
@@ -632,7 +632,7 @@
 .tm-qn-btn--delete:hover { background: rgba(248, 113, 113, 0.1); color: var(--c-danger); }
 .tm-qn-btn:focus-visible { outline: 2px solid var(--c-accent-line); outline-offset: 1px; }
 
-/* ── inline error bar ────────────────────────────────────── */
+/* -- inline error bar -------------------------------------- */
 .tm-error-bar {
   display: flex; align-items: flex-start; gap: 8px;
   padding: 10px 20px 12px;
@@ -643,7 +643,7 @@
 }
 .tm-error-bar svg { flex-shrink: 0; margin-top: 1px; }
 
-/* ── tab navigation ──────────────────────────────────────── */
+/* -- tab navigation ---------------------------------------- */
 .tm-tab-nav {
   display: flex;
   padding: 0 12px;
@@ -674,7 +674,7 @@
   border-radius: var(--r-pill); font-size: 9px; font-weight: 700; line-height: 1;
 }
 
-/* ── week strip calendar ─────────────────────────────────── */
+/* -- week strip calendar ----------------------------------- */
 .tm-week-strip {
   display: flex; gap: 3px; padding: 14px 16px 10px;
 }
@@ -709,7 +709,7 @@
 }
 .tm-week-dot--done { background: var(--c-text-trace); opacity: 0.4; }
 
-/* ── category chips ──────────────────────────────────────── */
+/* -- category chips ---------------------------------------- */
 .tm-cat-row {
   display: flex; gap: 5px; padding: 0 16px 12px; flex-wrap: wrap;
 }
@@ -727,7 +727,7 @@
   color: #fff; border-color: transparent;
 }
 
-/* ── task enhancements ───────────────────────────────────── */
+/* -- task enhancements ------------------------------------- */
 .tm-task-cat {
   font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
   padding: 1px 6px; border-radius: var(--r-pill);
@@ -738,7 +738,7 @@
   flex-shrink: 0; letter-spacing: 0; font-variant-numeric: tabular-nums;
 }
 
-/* ── quick add with category ─────────────────────────────── */
+/* -- quick add with category ------------------------------- */
 .tm-qadd-section { padding: 0 16px 12px; }
 .tm-qadd-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
 .tm-qadd-input {
@@ -762,7 +762,7 @@
 .tm-qadd-chip.active { color: #fff; border-color: transparent; }
 .tm-qadd-sep { width: 1px; background: var(--c-border); margin: 0 2px; align-self: stretch; }
 
-/* ── notes tab ───────────────────────────────────────────── */
+/* -- notes tab --------------------------------------------- */
 .tm-notes-tab { padding-bottom: 8px; }
 .tm-page-note-section { padding: 14px 16px; border-bottom: 1px solid var(--c-border); }
 .tm-note-section-label {
@@ -808,7 +808,7 @@
 .tm-note-add-input:focus { border-bottom-color: var(--c-accent-line); color: var(--c-text); }
 .tm-note-cat-select { display: flex; gap: 4px; padding: 6px 16px 0; flex-wrap: wrap; }
 
-/* ── goals tab ───────────────────────────────────────────── */
+/* -- goals tab --------------------------------------------- */
 .tm-goals-tab { padding: 14px 16px; }
 .tm-goal-input-wrap { margin-bottom: 14px; }
 .tm-goal-input {
@@ -910,8 +910,8 @@
   padding: 24px 16px; font-style: italic;
 }
 
-/* ── insights tab ────────────────────────────────────────── */
+/* -- insights tab ------------------------------------------ */
 .tm-insights-tab { padding-bottom: 4px; }
 
-/* ── dashboard button in header ──────────────────────────── */
+/* -- dashboard button in header ---------------------------- */
 .tm-icon-btn--dashboard { margin-right: 2px; }

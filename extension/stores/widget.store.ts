@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { SessionSnapshot, UrlNote, UserTask, GlobalNote, Goal, TaskCategory } from "../lib/types";
 
-/** Retry chrome.runtime.sendMessage up to 3 times — MV3 service workers go to sleep. */
+/** Retry chrome.runtime.sendMessage up to 3 times - MV3 service workers go to sleep. */
 async function sendMsg(msg: object, retries = 3): Promise<unknown> {
   let last: unknown;
   for (let i = 0; i < retries; i++) {

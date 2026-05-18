@@ -4,7 +4,7 @@ vi.mock("../lib/ai/index", () => ({
   analyzeSession: vi.fn().mockResolvedValue({
     topic: "React debugging",
     summary: "User is debugging React hydration",
-    narrative: "You've been debugging a React hydration error for 15 minutes — 2 Stack Overflow tabs and a GitHub issue.",
+    narrative: "You've been debugging a React hydration error for 15 minutes - 2 Stack Overflow tabs and a GitHub issue.",
     todos: [
       { text: "Fix hydration error", deadline: null, source: "https://stackoverflow.com/questions/1" },
       { text: "Check React 19 docs", deadline: null, source: "https://github.com/facebook/react/issues/421" },
@@ -39,7 +39,7 @@ Object.defineProperty(globalThis, "chrome", {
   value: {
     tabs: {
       query: vi.fn().mockResolvedValue(mockTabs),
-      sendMessage: vi.fn().mockResolvedValue(""),
+      sendMessage: vi.fn((_tabId, _msg, cb) => cb({ text: "React hydration mismatch content" })),
     },
     storage: {
       local: { get: vi.fn(), set: vi.fn() },
@@ -63,6 +63,17 @@ describe("captureTabExcerpts", () => {
     const { captureTabExcerpts } = await import("../lib/session-engine");
     const tabs = await captureTabExcerpts();
     expect(tabs[0]).toMatchObject({ id: 1, url: "https://stackoverflow.com/questions/1" });
+  });
+
+  it("reads content-script excerpts for trackable tabs", async () => {
+    const { captureTabExcerpts } = await import("../lib/session-engine");
+    const tabs = await captureTabExcerpts();
+    expect(tabs[0].excerpt).toBe("React hydration mismatch content");
+    expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(
+      1,
+      { type: "TABMIND_GET_EXCERPT" },
+      expect.any(Function)
+    );
   });
 });
 

@@ -1,4 +1,4 @@
-// Generates icon16.png, icon48.png, icon128.png — pure Node, no deps.
+// Generates icon16.png, icon48.png, icon128.png - pure Node, no deps.
 import { writeFileSync, mkdirSync } from "node:fs";
 import { deflateSync } from "node:zlib";
 
@@ -24,15 +24,15 @@ function chunk(type, data) {
 }
 
 function makePng(size) {
-  // RGBA pixels — purple gradient with rounded corners
+  // RGBA pixels - purple gradient with rounded corners
   const raw = Buffer.alloc(size * size * 4);
   const r0 = 0.22; // corner radius as fraction
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const t = (x + y) / (2 * (size - 1));
-      const r = Math.round(139 - 60 * t); // #8b → #53
-      const g = Math.round(92 - 60 * t);  // #5c → #20
-      const b = Math.round(246 - 103 * t);// #f6 → #8f
+      const r = Math.round(139 - 60 * t); // #8b -> #53
+      const g = Math.round(92 - 60 * t);  // #5c -> #20
+      const b = Math.round(246 - 103 * t);// #f6 -> #8f
       // rounded rect mask
       const cx = (size - 1) / 2, cy = (size - 1) / 2;
       const rx = cx * (1 - r0), ry = cy * (1 - r0);

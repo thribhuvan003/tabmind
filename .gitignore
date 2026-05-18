@@ -11,3 +11,6 @@ out/
 .agents/
 .claude/
 skills-lock.json
+
+.codex/
+web/tsconfig.tsbuildinfo

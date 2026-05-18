@@ -1,14 +1,14 @@
 /**
- * TabMind design tokens — Superhuman-inspired dark glass.
+ * TabMind design tokens - Superhuman-inspired dark glass.
  *
  * Palette decisions:
  *   - background is not pure black; warm-cool deep neutral (#0b0b0f) so glass blur reads.
- *   - accent is a single restrained violet (oklch ~67% C0.18 H285) — no rainbow.
+ *   - accent is a single restrained violet (oklch ~67% C0.18 H285) - no rainbow.
  *   - hairline borders + inset highlight on top for the "etched glass" effect.
  *
  * Easing is Japanese-influenced: heavy ease-out, never linear, never bouncy.
- *   - "Yūgen" curve for entries: cubic-bezier(0.16, 1, 0.3, 1) — easeOutExpo
- *   - "Ma" curve for micro-actions: cubic-bezier(0.22, 1, 0.36, 1) — easeOutQuart
+ *   - "Yugen" curve for entries: cubic-bezier(0.16, 1, 0.3, 1) - easeOutExpo
+ *   - "Ma" curve for micro-actions: cubic-bezier(0.22, 1, 0.36, 1) - easeOutQuart
  */
 
 export const T = {

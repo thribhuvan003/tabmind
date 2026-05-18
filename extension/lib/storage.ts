@@ -43,7 +43,7 @@ export async function storageRemove<K extends Key>(key: K): Promise<void> {
   await area(key).remove(key);
 }
 
-/* ─── notes ────────────────────────────────────────────── */
+/* --- notes ---------------------------------------------- */
 
 export async function getNote(normalizedUrl: string) {
   const notes = (await storageGet("tabmind:notes")) ?? {};
@@ -60,7 +60,7 @@ export async function setNote(normalizedUrl: string, text: string) {
   await storageSet("tabmind:notes", notes);
 }
 
-/* ─── sessions ─────────────────────────────────────────── */
+/* --- sessions ------------------------------------------- */
 
 export async function getLatestSession() {
   return (await storageGet("tabmind:session:latest")) ?? null;
@@ -78,7 +78,7 @@ export async function saveSession(snapshot: StorageSchema["tabmind:session:lates
   await storageSet("tabmind:session:history", history.slice(0, 50));
 }
 
-/* ─── provider / keys ──────────────────────────────────── */
+/* --- provider / keys ------------------------------------ */
 
 export async function getProvider(): Promise<AiProvider> {
   return (await storageGet("tabmind:provider")) ?? "grok";
@@ -103,7 +103,7 @@ export async function getActiveApiKey(): Promise<{ provider: AiProvider; key: st
   return { provider, key };
 }
 
-/* ─── blocklist ────────────────────────────────────────── */
+/* --- blocklist ------------------------------------------ */
 
 export async function getBlocklist(): Promise<string[]> {
   const stored = await storageGet("tabmind:blocklist");
@@ -115,7 +115,7 @@ export async function setBlocklist(list: string[]): Promise<void> {
   await storageSet("tabmind:blocklist", cleaned);
 }
 
-/* ─── global notes ─────────────────────────────────────────── */
+/* --- global notes ------------------------------------------- */
 
 const GLOBAL_NOTES_CAP = 100;
 
@@ -158,7 +158,7 @@ export function isBlocked(url: string, blocklist: string[]): boolean {
   }
 }
 
-/* ─── goals ─────────────────────────────────────────────── */
+/* --- goals ----------------------------------------------- */
 
 export async function getGoals(): Promise<Goal[]> {
   return (await storageGet("tabmind:goals")) ?? [];
@@ -185,7 +185,7 @@ export async function deleteGoal(id: string): Promise<void> {
   await saveGoals(goals.filter((g) => g.id !== id));
 }
 
-/* ─── url helpers ──────────────────────────────────────── */
+/* --- url helpers ---------------------------------------- */
 
 export function normalizeUrl(raw: string): string {
   try {

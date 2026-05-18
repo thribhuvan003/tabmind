@@ -8,6 +8,7 @@ initSentry("background");
 
 const ALARM_SNAPSHOT = "tabmind:snapshot";
 const ALARM_ROLLOVER = "tabmind:daily-rollover";
+const SNAPSHOT_INTERVAL_MINUTES = 1.5;
 const IDLE_RESET_MIN = 5;
 
 /** Push the freshest snapshot + task update to every open widget. */
@@ -18,7 +19,7 @@ async function broadcastToAll(type: string) {
       if (!t.id) continue;
       chrome.tabs.sendMessage(t.id, { type }).catch(() => {});
     }
-  } catch { /* no tabs — fine */ }
+  } catch { /* no tabs - fine */ }
 }
 
 type PipelineResult = { snapshot: import("../../lib/types").SessionSnapshot | null; error?: string };
@@ -42,7 +43,7 @@ async function snapshotPipeline(): Promise<PipelineResult> {
     const keyLinks: Record<string, string> = {
       openrouter: "openrouter.ai/keys",
       cerebras: "cloud.cerebras.ai/platform/api-keys",
-      grok: "console.groq.com/keys",
+      grok: "console.x.ai or console.groq.com/keys",
       claude: "console.anthropic.com/settings/keys",
       gemini: "aistudio.google.com/apikey",
       openai: "platform.openai.com/api-keys",
@@ -54,10 +55,10 @@ async function snapshotPipeline(): Promise<PipelineResult> {
       if (raw.includes("free_tier") || raw.includes("limit: 0")) {
         friendly = "API key quota is 0. Create a new project or upgrade your plan at " + link;
       } else {
-        friendly = `Rate limit hit (429) on ${provider}. TabMind will retry in 3 minutes — or switch to Cerebras/Groq for higher free limits.`;
+        friendly = `Rate limit hit (429) on ${provider}. TabMind will retry in 90 seconds, or switch to Cerebras/OpenRouter if you need higher free limits.`;
       }
     } else if (raw.includes("401") || raw.includes("403") || raw.includes("API_KEY_INVALID") || raw.includes("Invalid") || raw.includes("Unauthorized")) {
-      friendly = `Invalid API key for ${provider}. Re-paste your key in Settings → ${link}`;
+      friendly = `Invalid API key for ${provider}. Re-paste your key in Settings -> ${link}`;
     } else if (raw.includes("404")) {
       friendly = `Model not found (404) on ${provider}. Try saving your key again.`;
     }
@@ -74,7 +75,8 @@ async function goalBreakdownPipeline(goalText: string): Promise<{ tasks: string[
     const prompt = `Break down this goal into exactly 5 concrete, actionable tasks (each doable in under 2 hours). Be specific. Return JSON only.\nGoal: "${goalText}"\nFormat: {"tasks": ["Task 1", "Task 2", "Task 3", "Task 4", "Task 5"]}`;
     let raw = "{}";
     if (provider === "grok") {
-      const r = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ model: "llama-3.3-70b-versatile", temperature: 0.5, max_tokens: 400, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });
+      const isXaiKey = key.startsWith("xai-");
+      const r = await fetch(isXaiKey ? "https://api.x.ai/v1/chat/completions" : "https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ model: isXaiKey ? "grok-4.3" : "llama-3.3-70b-versatile", temperature: 0.5, max_tokens: 400, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });
       raw = (await r.json())?.choices?.[0]?.message?.content ?? "{}";
     } else if (provider === "claude") {
       const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" }, body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 400, messages: [{ role: "user", content: prompt }] }) });
@@ -120,7 +122,7 @@ function scheduleRolloverAlarm() {
 
 async function ensureAlarms() {
   const snap = await chrome.alarms.get(ALARM_SNAPSHOT);
-  if (!snap) chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: 3 });
+  if (!snap) chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: SNAPSHOT_INTERVAL_MINUTES });
   const roll = await chrome.alarms.get(ALARM_ROLLOVER);
   if (!roll) scheduleRolloverAlarm();
 }
@@ -133,7 +135,7 @@ async function ensureSessionStart() {
 export default defineBackground(() => {
   chrome.runtime.onInstalled.addListener(async () => {
     await storageSet("tabmind:session:startedAt", Date.now());
-    chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: 3 });
+    chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: SNAPSHOT_INTERVAL_MINUTES });
     scheduleRolloverAlarm();
     try { chrome.idle?.setDetectionInterval?.(IDLE_RESET_MIN * 60); } catch { /* ignore */ }
   });
@@ -141,7 +143,7 @@ export default defineBackground(() => {
   chrome.runtime.onStartup.addListener(async () => {
     await storageSet("tabmind:session:startedAt", Date.now());
     await storageSet("tabmind:lastResumeAt", Date.now());
-    chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: 3 });
+    chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: SNAPSHOT_INTERVAL_MINUTES });
     scheduleRolloverAlarm();
     // Check for rollover tasks on browser start (handles overnight).
     await doRollover();
@@ -157,7 +159,7 @@ export default defineBackground(() => {
     }
   });
 
-  // Idle reset: 5+ min idle → next "active" event starts a fresh session.
+  // Idle reset: 5+ min idle -> next "active" event starts a fresh session.
   try {
     chrome.idle?.onStateChanged?.addListener(async (state) => {
       if (state === "active") {
@@ -170,7 +172,7 @@ export default defineBackground(() => {
     });
   } catch { /* idle perm not granted */ }
 
-  // ⌘⇧K / Ctrl+Shift+K — toggle widget on active tab.
+  // Cmd+Shift+K / Ctrl+Shift+K - toggle widget on active tab.
   try {
     chrome.commands?.onCommand.addListener((command) => {
       if (command !== "tabmind-toggle") return;

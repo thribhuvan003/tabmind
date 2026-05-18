@@ -33,7 +33,7 @@ const NOTE_CAT_META: Record<NoteCategory, { label: string; color: string }> = {
   learning: { label: "Learning", color: "#fbbf24" },
 };
 
-/* ── error boundary ─────────────────────────────────────── */
+/* -- error boundary --------------------------------------- */
 
 interface EBState { crashed: boolean }
 class ErrorBoundary extends Component<{ children: ReactNode }, EBState> {
@@ -47,7 +47,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, EBState> {
           padding: "20px 18px", color: "#f87171", fontFamily: "system-ui",
           fontSize: 12, lineHeight: 1.6, textAlign: "center",
         }}>
-          <div style={{ marginBottom: 8, fontSize: 20 }}>⚠</div>
+          <div style={{ marginBottom: 8, fontSize: 20 }}>!</div>
           TabMind ran into an error. Refresh the page to reload.
         </div>
       );
@@ -56,7 +56,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, EBState> {
   }
 }
 
-/** Public entry — always wrapped in ErrorBoundary */
+/** Public entry - always wrapped in ErrorBoundary */
 export function Widget() {
   return <ErrorBoundary><WidgetInner /></ErrorBoundary>;
 }
@@ -160,7 +160,7 @@ function WidgetInner() {
   const noteText = note?.text ?? "";
   const todayPending = getTodayTasks(tasks).filter(t => t.status === "pending").length;
 
-  // ── Minimized orb (draggable, click to expand) ──────────
+  // -- Minimized orb (draggable, click to expand) ----------
   if (minimized) {
     const pendingCount = getTodayTasks(tasks).length;
     return (
@@ -215,7 +215,7 @@ function WidgetInner() {
     );
   }
 
-  // ── Expanded widget ──────────────────────────────────────
+  // -- Expanded widget --------------------------------------
   return (
     <div
       className="tm-widget"
@@ -306,7 +306,7 @@ function WidgetInner() {
 
               {/* tab groups */}
               {groups.length > 0 && (
-                <Section label={`Tab groups · ${groups.length}`} collapsible defaultOpen={false}>
+                <Section label={`Tab groups - ${groups.length}`} collapsible defaultOpen={false}>
                   <GroupList groups={groups} />
                 </Section>
               )}
@@ -321,7 +321,7 @@ function WidgetInner() {
   );
 }
 
-/* ── tab navigation ─────────────────────────────────────── */
+/* -- tab navigation --------------------------------------- */
 
 function TabNav({
   activeTab,
@@ -351,7 +351,7 @@ function TabNav({
   );
 }
 
-/* ── today tab ──────────────────────────────────────────── */
+/* -- today tab -------------------------------------------- */
 
 function TodayTab({
   tasks,
@@ -421,7 +421,7 @@ function TodayTab({
       <div style={{ padding: "0 16px 4px" }}>
         {filteredToday.length === 0 ? (
           <p className="tm-task-empty">
-            {catFilter !== "all" ? `No ${CAT_META[catFilter].label} tasks today.` : "All caught up — or add a task below."}
+            {catFilter !== "all" ? `No ${CAT_META[catFilter].label} tasks today.` : "All caught up - or add a task below."}
           </p>
         ) : (
           <ul className="tm-tasks">
@@ -499,7 +499,7 @@ function TodayTab({
   );
 }
 
-/* ── week strip ─────────────────────────────────────────── */
+/* -- week strip ------------------------------------------- */
 
 function getWeekDays(): Date[] {
   const today = new Date();
@@ -550,7 +550,7 @@ function WeekStrip({ tasks }: { tasks: UserTask[] }) {
   );
 }
 
-/* ── quick add task ─────────────────────────────────────── */
+/* -- quick add task --------------------------------------- */
 
 function QuickAddTask({
   onAdd,
@@ -577,7 +577,7 @@ function QuickAddTask({
       <div className="tm-qadd-row">
         <input
           className="tm-qadd-input"
-          placeholder="+ Add a task…"
+          placeholder="+ Add a task..."
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
@@ -622,7 +622,7 @@ function QuickAddTask({
   );
 }
 
-/* ── notes tab ──────────────────────────────────────────── */
+/* -- notes tab -------------------------------------------- */
 
 function NotesTab({
   noteText,
@@ -670,7 +670,7 @@ function NotesTab({
       <div className="tm-note-add-row">
         <input
           className="tm-note-add-input"
-          placeholder="Capture a thought…"
+          placeholder="Capture a thought..."
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -729,7 +729,7 @@ function NotesTab({
       <div className="tm-note-cards">
         {filtered.length === 0 && (
           <p style={{ fontSize: 12, color: "var(--c-text-muted)", fontStyle: "italic", textAlign: "center", padding: "16px 0" }}>
-            No notes yet — add one above.
+            No notes yet - add one above.
           </p>
         )}
         {filtered.map((note) => (
@@ -800,7 +800,7 @@ function NoteCard({
   );
 }
 
-/* ── goals tab ──────────────────────────────────────────── */
+/* -- goals tab -------------------------------------------- */
 
 function GoalsTab({
   goals,
@@ -827,7 +827,7 @@ function GoalsTab({
     try {
       // First save the goal
       await onAddGoal(title);
-      // Then request AI breakdown — retry in case service worker is sleeping
+      // Then request AI breakdown - retry in case service worker is sleeping
       let res: { tasks?: string[] } | null = null;
       for (let i = 0; i < 3; i++) {
         try {
@@ -881,12 +881,12 @@ function GoalsTab({
           disabled={!goalInput.trim() || breaking}
           type="button"
         >
-          {breaking ? "Breaking down…" : "Break it down ✦"}
+          {breaking ? "Breaking down..." : "Break it down *"}
         </button>
       </div>
 
       {goals.length === 0 && !breaking && (
-        <p className="tm-goal-empty">No goals yet — enter one above to get an AI action plan.</p>
+        <p className="tm-goal-empty">No goals yet - enter one above to get an AI action plan.</p>
       )}
 
       <div className="tm-goal-cards">
@@ -936,7 +936,7 @@ function GoalCard({
         <div className="tm-goal-breaking">
           <span>Breaking down</span>
           <span className="tm-goal-breaking-dots">
-            <span>·</span><span>·</span><span>·</span>
+            <span>-</span><span>-</span><span>-</span>
           </span>
         </div>
       ) : (
@@ -974,7 +974,7 @@ function GoalCard({
                 type="button"
                 title="Add pending tasks to Today"
               >
-                Add to tasks →
+                Add to tasks
               </button>
             </div>
           )}
@@ -984,7 +984,7 @@ function GoalCard({
   );
 }
 
-/* ── no-api-key banner ──────────────────────────────────── */
+/* -- no-api-key banner ------------------------------------ */
 
 function NoApiKeyBanner() {
   return (
@@ -1013,7 +1013,7 @@ function NoApiKeyBanner() {
   );
 }
 
-/* ── header ─────────────────────────────────────────────── */
+/* -- header ----------------------------------------------- */
 
 function Header({
   onMinimize,
@@ -1060,7 +1060,7 @@ function Header({
   );
 }
 
-/* ── session block ──────────────────────────────────────── */
+/* -- session block ---------------------------------------- */
 
 function SessionBlock({
   topic,
@@ -1078,7 +1078,7 @@ function SessionBlock({
   loading: boolean;
 }) {
   const noSession = !topic && !narrative && !summary;
-  const placeholder = loading ? "Analyzing your tabs…" : hasApiKey ? "Ready to analyze" : "Ready when you add an API key.";
+  const placeholder = loading ? "Analyzing your tabs..." : hasApiKey ? "Ready to analyze" : "Ready when you add an API key.";
 
   return (
     <div className="tm-session">
@@ -1098,8 +1098,8 @@ function SessionBlock({
       ) : noSession && hasApiKey ? (
         <p className="tm-narrative tm-narrative-empty">
           {loading
-            ? "Reading your open tabs…"
-            : "Hit ↻ above to analyze your tabs now — or wait 90 seconds for the auto-snapshot."}
+            ? "Reading your open tabs..."
+            : "Hit ↻ above to analyze your tabs now - or wait 90 seconds for the auto-snapshot."}
         </p>
       ) : !hasApiKey ? null : (
         <p className="tm-narrative tm-narrative-empty">Analysis will appear here.</p>
@@ -1108,7 +1108,7 @@ function SessionBlock({
   );
 }
 
-/* ── note editor ────────────────────────────────────────── */
+/* -- note editor ------------------------------------------ */
 
 function NoteEditor({ value, onSave }: { value: string; onSave: (t: string) => void }) {
   const [text, setText] = useState(value);
@@ -1131,7 +1131,7 @@ function NoteEditor({ value, onSave }: { value: string; onSave: (t: string) => v
     <div className="tm-note-wrap" data-no-drag>
       <textarea
         className="tm-note"
-        placeholder="Pin a thought to this URL — saved automatically."
+        placeholder="Pin a thought to this URL - saved automatically."
         value={text}
         onChange={onChange}
         rows={2}
@@ -1141,7 +1141,7 @@ function NoteEditor({ value, onSave }: { value: string; onSave: (t: string) => v
   );
 }
 
-/* ── task row ───────────────────────────────────────────── */
+/* -- task row --------------------------------------------- */
 
 const SCHEDULE_OPTIONS = [
   { label: "Today", getDueDate: todayISO },
@@ -1210,7 +1210,7 @@ function TaskRow({
       )}
 
       {task.isAiGenerated && task.status === "pending" && (
-        <span className="tm-task-ai" title="Extracted by AI">✦</span>
+        <span className="tm-task-ai" title="Extracted by AI">*</span>
       )}
 
       <div className="tm-task-menu-wrap">
@@ -1255,7 +1255,7 @@ function TaskRow({
   );
 }
 
-/* ── tab groups ─────────────────────────────────────────── */
+/* -- tab groups ------------------------------------------- */
 
 function GroupList({ groups }: { groups: TabGroup[] }) {
   const palette = ["#a78bfa", "#60a5fa", "#34d399", "#fbbf24", "#f472b6", "#fb923c"];
@@ -1272,7 +1272,7 @@ function GroupList({ groups }: { groups: TabGroup[] }) {
   );
 }
 
-/* ── footer ─────────────────────────────────────────────── */
+/* -- footer ----------------------------------------------- */
 
 function Footer({ continueHint, onAsk }: { continueHint: string | null; onAsk: () => void }) {
   return (
@@ -1292,7 +1292,7 @@ function Footer({ continueHint, onAsk }: { continueHint: string | null; onAsk: (
   );
 }
 
-/* ── shared section ─────────────────────────────────────── */
+/* -- shared section --------------------------------------- */
 
 function Section({
   label,
@@ -1363,7 +1363,7 @@ function IconBtn({
   );
 }
 
-/* ── helpers ─────────────────────────────────────────────── */
+/* -- helpers ----------------------------------------------- */
 
 function relativeTime(ts: number): string {
   const secs = Math.floor((Date.now() - ts) / 1000);

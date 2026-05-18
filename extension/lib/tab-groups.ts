@@ -39,7 +39,7 @@ export async function applyTabGroups(groups: TabGroup[]): Promise<void> {
         );
       });
     } catch {
-      /* silent — grouping is enhancement, not core */
+      /* silent - grouping is enhancement, not core */
     }
   }
 }

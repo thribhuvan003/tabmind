@@ -19,9 +19,9 @@ function extractText(root: HTMLElement): string {
   return (clone.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 
-/** Pull a clean text excerpt — reads the richest content available on the page. */
+/** Pull a clean text excerpt - reads the richest content available on the page. */
 function getPageExcerpt(): string {
-  // Priority selector list: most specific → most generic
+  // Priority selector list: most specific -> most generic
   const candidates = [
     "[role='main']",
     "main",
@@ -125,7 +125,7 @@ export default defineContentScript({
       }
     });
 
-    // Popup → "open widget here" + ⌘⇧K toggle + session updates.
+    // Popup -> "open widget here" + Cmd+Shift+K toggle + session updates.
     chrome.runtime.onMessage.addListener((msg) => {
       try {
         const s = useWidgetStore.getState();

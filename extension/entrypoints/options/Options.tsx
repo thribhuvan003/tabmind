@@ -121,7 +121,7 @@ export function Options() {
     const k = key.trim();
     if (k.startsWith("sk-or-v1-")) { setOpenrouterKey(k); setProvider("openrouter"); }
     else if (k.startsWith("csk-")) { setCerebrasKey(k); setProvider("cerebras"); }
-    else if (k.startsWith("gsk_")) { setGrokKey(k); setProvider("grok"); }
+    else if (k.startsWith("xai-") || k.startsWith("gsk_")) { setGrokKey(k); setProvider("grok"); }
     else if (k.startsWith("sk-ant-")) { setClaudeKey(k); setProvider("claude"); }
     else if (k.startsWith("AIzaSy")) { setGeminiKey(k); setProvider("gemini"); }
     else if (k.startsWith("sk-")) { setOpenaiKey(k); setProvider("openai"); }
@@ -244,11 +244,11 @@ export function Options() {
         <div className="card">
           <div className="card-title">AI Provider</div>
 
-          <label className="label">Paste any API key — provider auto-detected</label>
+          <label className="label">Paste any API key - provider auto-detected</label>
           <input
             className="input"
             type="password"
-            placeholder="Paste key: sk-or-v1-… / csk-… / gsk_… / sk-ant-… / AIzaSy… / sk-…"
+            placeholder="Paste key: xai-... / gsk_... / sk-or-v1-... / csk-... / sk-ant-... / AIzaSy... / sk-..."
             autoComplete="off"
             onChange={(e) => autoDetect(e.target.value)}
           />
@@ -261,7 +261,7 @@ export function Options() {
             {([
               { id: "openrouter" as AiProvider, name: "OpenRouter", sub: "Llama 3.3 70B", free: true },
               { id: "cerebras" as AiProvider, name: "Cerebras", sub: "Llama 3.3 70B", free: true },
-              { id: "grok" as AiProvider, name: "Groq", sub: "Llama 3.3 70B", free: true },
+              { id: "grok" as AiProvider, name: "Grok/Groq", sub: "xAI or Groq key", free: false },
               { id: "claude" as AiProvider, name: "Claude", sub: "Haiku 4.5", free: true },
               { id: "gemini" as AiProvider, name: "Gemini", sub: "2.0 Flash", free: true },
               { id: "openai" as AiProvider, name: "OpenAI", sub: "GPT-4o mini", free: false },
@@ -282,10 +282,10 @@ export function Options() {
             <>
               <label className="label" htmlFor="openrouter-key">OpenRouter API key</label>
               <input id="openrouter-key" className="input" type="password" value={openrouterKey}
-                onChange={(e) => setOpenrouterKey(e.target.value)} placeholder="sk-or-v1-…" autoComplete="off" />
+                onChange={(e) => setOpenrouterKey(e.target.value)} placeholder="sk-or-v1-..." autoComplete="off" />
               <p className="hint">
                 Key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a>.
-                Uses <strong style={{ color: "#c4b5fd" }}>Llama 3.3 70B</strong> — free tier available, access to 300+ models.
+                Uses <strong style={{ color: "#c4b5fd" }}>Llama 3.3 70B</strong> - free tier available, access to 300+ models.
               </p>
             </>
           )}
@@ -294,22 +294,22 @@ export function Options() {
             <>
               <label className="label" htmlFor="cerebras-key">Cerebras API key</label>
               <input id="cerebras-key" className="input" type="password" value={cerebrasKey}
-                onChange={(e) => setCerebrasKey(e.target.value)} placeholder="csk-…" autoComplete="off" />
+                onChange={(e) => setCerebrasKey(e.target.value)} placeholder="csk-..." autoComplete="off" />
               <p className="hint">
                 Key from <a href="https://cloud.cerebras.ai/platform/api-keys" target="_blank" rel="noopener">cloud.cerebras.ai</a>.
-                Uses <strong style={{ color: "#c4b5fd" }}>Llama 3.3 70B</strong> — world's fastest inference, generous free tier.
+                Uses <strong style={{ color: "#c4b5fd" }}>Llama 3.3 70B</strong> - world's fastest inference, generous free tier.
               </p>
             </>
           )}
 
           {provider === "grok" && (
             <>
-              <label className="label" htmlFor="grok-key">Groq API key</label>
+              <label className="label" htmlFor="grok-key">Grok or Groq API key</label>
               <input id="grok-key" className="input" type="password" value={grokKey}
-                onChange={(e) => setGrokKey(e.target.value)} placeholder="gsk_…" autoComplete="off" />
+                onChange={(e) => setGrokKey(e.target.value)} placeholder="xai-... or gsk_..." autoComplete="off" />
               <p className="hint">
-                Free key from <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com</a>.
-                Uses <strong style={{ color: "#c4b5fd" }}>Llama 3.3 70B</strong> — fully free, extremely fast inference.
+                Use an xAI key from <a href="https://console.x.ai" target="_blank" rel="noopener">console.x.ai</a> or a Groq key from <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com</a>.
+                xAI uses <strong style={{ color: "#c4b5fd" }}>grok-4.3</strong>; Groq uses <strong style={{ color: "#c4b5fd" }}>Llama 3.3 70B</strong>.
               </p>
             </>
           )}
@@ -318,10 +318,10 @@ export function Options() {
             <>
               <label className="label" htmlFor="claude-key">Anthropic API key</label>
               <input id="claude-key" className="input" type="password" value={claudeKey}
-                onChange={(e) => setClaudeKey(e.target.value)} placeholder="sk-ant-…" autoComplete="off" />
+                onChange={(e) => setClaudeKey(e.target.value)} placeholder="sk-ant-..." autoComplete="off" />
               <p className="hint">
                 Get a free key from <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.
-                Uses <strong style={{ color: "#c4b5fd" }}>claude-haiku-4-5</strong> — fastest model, generous free tier.
+                Uses <strong style={{ color: "#c4b5fd" }}>claude-haiku-4-5</strong> - fastest model, generous free tier.
               </p>
             </>
           )}
@@ -330,9 +330,9 @@ export function Options() {
             <>
               <label className="label" htmlFor="gemini-key">Gemini API key</label>
               <input id="gemini-key" className="input" type="password" value={geminiKey}
-                onChange={(e) => setGeminiKey(e.target.value)} placeholder="AIzaSy…" autoComplete="off" />
+                onChange={(e) => setGeminiKey(e.target.value)} placeholder="AIzaSy..." autoComplete="off" />
               <p className="hint">
-                Free key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a> — create a <strong style={{ color: "#c4b5fd" }}>new project</strong> to get free tier access.
+                Free key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com</a> - create a <strong style={{ color: "#c4b5fd" }}>new project</strong> to get free tier access.
               </p>
             </>
           )}
@@ -341,10 +341,10 @@ export function Options() {
             <>
               <label className="label" htmlFor="openai-key">OpenAI API key</label>
               <input id="openai-key" className="input" type="password" value={openaiKey}
-                onChange={(e) => setOpenaiKey(e.target.value)} placeholder="sk-…" autoComplete="off" />
+                onChange={(e) => setOpenaiKey(e.target.value)} placeholder="sk-..." autoComplete="off" />
               <p className="hint">
                 Key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com</a>.
-                Uses gpt-4o-mini — costs ~$0.001 per session analysis.
+                Uses gpt-4o-mini - costs ~$0.001 per session analysis.
               </p>
             </>
           )}
@@ -354,7 +354,7 @@ export function Options() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              Saved — analyzing your tabs now…
+              Saved - analyzing your tabs now...
             </div>
           )}
 
@@ -375,7 +375,7 @@ export function Options() {
 
       {tab === "blocklist" && (
         <div className="card">
-          <div className="card-title">Privacy — blocked domains</div>
+          <div className="card-title">Privacy - blocked domains</div>
           <p style={{ fontSize: 12.5, color: "#4b5568", lineHeight: 1.6, marginBottom: 20 }}>
             TabMind will never extract page text from these domains.
             Tab titles and URLs are still used for session summaries.
@@ -383,7 +383,7 @@ export function Options() {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
             {blocklist.map((d) => (
               <button type="button" key={d} className="blocklist-tag" onClick={() => removeDomain(d)} title="Click to remove">
-                {d} <span style={{ opacity: 0.5, fontSize: 10 }}>×</span>
+                {d} <span style={{ opacity: 0.5, fontSize: 10 }}>x</span>
               </button>
             ))}
           </div>
@@ -401,7 +401,7 @@ export function Options() {
           <button type="button"
             onClick={resetBlocklist}
             style={{ marginTop: 14, fontSize: 12, color: "#4b5568", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-          >Reset to defaults ↺</button>
+          >Reset to defaults</button>
         </div>
       )}
 
@@ -416,7 +416,7 @@ export function Options() {
             ["Keys storage", "chrome.storage.sync (encrypted by Chrome)"],
             ["Snapshots storage", "chrome.storage.local"],
             ["Tab grouping", "automatic, via chrome.tabGroups"],
-            ["Keyboard shortcut", "⌘⇧K / Ctrl+Shift+K"],
+            ["Keyboard shortcut", "Cmd+Shift+K / Ctrl+Shift+K"],
           ].map(([k, v]) => (
             <div key={k} className="row">
               <span className="row-key">{k}</span>
@@ -432,7 +432,7 @@ export function Options() {
                 style={{ fontSize: 12.5, color: "#4b5568", textDecoration: "none" }}
                 onMouseEnter={(e) => { e.currentTarget.style.color = "#94a3b8"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = "#4b5568"; }}>
-                {label} →
+                {label}
               </a>
             ))}
           </div>

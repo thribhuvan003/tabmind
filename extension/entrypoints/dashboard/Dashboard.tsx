@@ -465,15 +465,15 @@ export function Dashboard() {
           </div>
           <div className="db-header-right">
             <button type="button" className="db-close-btn" onClick={() => window.close()}>
-              Close ×
+              Close x
             </button>
           </div>
         </header>
 
-        {/* Sidebar — session history */}
+        {/* Sidebar - session history */}
         <aside className="db-sidebar">
           <div className="db-sidebar-title">Session History</div>
-          {loading && <div className="db-empty">Loading…</div>}
+          {loading && <div className="db-empty">Loading...</div>}
           {!loading && sessions.length === 0 && (
             <div className="db-empty">No sessions yet.</div>
           )}
@@ -491,7 +491,7 @@ export function Dashboard() {
           ))}
         </aside>
 
-        {/* Main — week calendar + note folders */}
+        {/* Main - week calendar + note folders */}
         <main className="db-main">
           {/* Week calendar */}
           <div className="db-card">
@@ -565,7 +565,7 @@ export function Dashboard() {
           </div>
         </main>
 
-        {/* Right panel — active session + goals */}
+        {/* Right panel - active session + goals */}
         <aside className="db-panel">
           {/* Current session narrative */}
           <div>
@@ -589,7 +589,7 @@ export function Dashboard() {
                         padding: "4px 0", fontSize: 11.5, color: "var(--c-text-dim)",
                         borderBottom: "1px solid var(--c-border)",
                       }}>
-                        <span style={{ color: "var(--c-accent)", marginTop: 1, flexShrink: 0 }}>✦</span>
+                        <span style={{ color: "var(--c-accent)", marginTop: 1, flexShrink: 0 }}>*</span>
                         {todo.text}
                       </div>
                     ))}
@@ -624,7 +624,7 @@ export function Dashboard() {
                             style={{ width: `${pct}%` }}
                           />
                         </div>
-                        <div className="db-goal-progress-label">{done}/{total} tasks · {pct}%</div>
+                        <div className="db-goal-progress-label">{done}/{total} tasks - {pct}%</div>
                       </>
                     )}
                   </div>

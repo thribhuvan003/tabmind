@@ -1,0 +1,101 @@
+import{r as o,s as l,d as q,j as e,e as s,f as S,D as P,c as E,R as U}from"./storage-DbxXa3vj.js";const H=`
+  @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Geist", "Inter", system-ui, sans-serif;
+    background: #07080d; color: #f3f4f7;
+    min-height: 100vh; -webkit-font-smoothing: antialiased;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 48px 24px;
+  }
+  #root { width: 100%; max-width: 640px; }
+  .card {
+    background: rgba(255,255,255,0.022);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px; padding: 32px 36px; margin-bottom: 16px;
+  }
+  .card-title { font-size: 14.5px; font-weight: 650; letter-spacing: -0.02em; color: #e8eaf0; margin-bottom: 20px; }
+  .label {
+    font-size: 10.5px; font-weight: 600; letter-spacing: 0.09em;
+    text-transform: uppercase; color: #a78bfa; margin-bottom: 6px; display: block;
+  }
+  .input {
+    width: 100%; padding: 11px 14px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 10px; font-size: 13.5px; color: #f3f4f7;
+    font-family: "Geist Mono", monospace; outline: none; letter-spacing: 0.03em;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+  }
+  .input:focus { border-color: rgba(167,139,250,0.5); box-shadow: 0 0 0 3px rgba(167,139,250,0.1); }
+  .input::placeholder { color: #42454f; }
+  .btn-save {
+    margin-top: 18px; padding: 11px 28px; font-size: 13.5px; font-weight: 600;
+    letter-spacing: -0.01em; color: #fff;
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(124,58,237,0.3);
+    transition: box-shadow 200ms ease, transform 120ms ease;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-save:hover { box-shadow: 0 6px 24px rgba(124,58,237,0.45); transform: translateY(-1px); }
+  .btn-save:active { transform: translateY(0); }
+  .btn-save:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+  .btn-danger {
+    padding: 11px 20px; font-size: 13px; font-weight: 500;
+    color: #64748b; background: transparent;
+    border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; cursor: pointer;
+    transition: all 150ms ease;
+  }
+  .btn-danger:hover { color: #ef4444; border-color: rgba(239,68,68,0.3); }
+  .status-ok {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12.5px; color: #4ade80; padding: 8px 12px;
+    background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2);
+    border-radius: 8px; margin-top: 12px;
+  }
+  .hint { font-size: 12px; color: #4b5568; line-height: 1.6; margin-top: 10px; }
+  .hint a { color: #a78bfa; text-decoration: none; }
+  .hint a:hover { text-decoration: underline; }
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 20px; }
+  .tab {
+    flex: 1; padding: 9px; font-size: 13px; font-weight: 500; text-align: center;
+    border-radius: 9px; cursor: pointer; border: 1px solid transparent;
+    transition: all 160ms ease; color: #6b6f7d; background: transparent;
+  }
+  .tab.active { color: #f3f4f7; background: rgba(167,139,250,0.12); border-color: rgba(167,139,250,0.25); }
+  .row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 13px;
+  }
+  .row:last-child { border-bottom: none; padding-bottom: 0; }
+  .row-key { color: #4b5568; }
+  .row-val { color: #94a3b8; font-family: "Geist Mono", monospace; font-size: 12px; }
+  .blocklist-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 99px; font-size: 11.5px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
+    color: #a1a4b0; cursor: pointer; transition: background 120ms ease;
+  }
+  .blocklist-tag:hover { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.25); color: #fca5a5; }
+  .tag { font-size: 9px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: #a78bfa; background: rgba(167,139,250,0.14); border: 1px solid rgba(167,139,250,0.25); padding: 2px 8px; border-radius: 99px; }
+  .provider-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 24px; }
+  .provider-btn {
+    padding: 12px 8px; border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.03); color: #6b6f7d; font-size: 12px; font-weight: 500;
+    text-align: center; transition: all 160ms ease; line-height: 1.4;
+  }
+  .provider-btn.active {
+    color: #e4d9ff; background: rgba(167,139,250,0.12);
+    border-color: rgba(167,139,250,0.4);
+    box-shadow: 0 0 0 3px rgba(167,139,250,0.08);
+  }
+  .provider-btn .provider-name { font-size: 13px; font-weight: 600; display: block; }
+  .provider-btn .provider-sub { font-size: 10px; opacity: 0.6; display: block; margin-top: 2px; }
+  .free-badge {
+    display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 1px 6px; border-radius: 99px;
+    background: rgba(74,222,128,0.12); color: #4ade80;
+    border: 1px solid rgba(74,222,128,0.25); margin-top: 4px;
+  }
+`;function $(){const[c,F]=o.useState("api"),[t,i]=o.useState("openrouter"),[d,p]=o.useState(""),[m,b]=o.useState(""),[g,x]=o.useState(""),[h,u]=o.useState(""),[f,y]=o.useState(""),[k,j]=o.useState(""),[L,C]=o.useState(!1),T=r=>{const a=r.trim();a.startsWith("sk-or-v1-")?(y(a),i("openrouter")):a.startsWith("csk-")?(j(a),i("cerebras")):a.startsWith("xai-")||a.startsWith("gsk_")?(p(a),i("grok")):a.startsWith("sk-ant-")?(b(a),i("claude")):a.startsWith("AIzaSy")?(x(a),i("gemini")):a.startsWith("sk-")&&(u(a),i("openai"))},[v,w]=o.useState([]),[N,K]=o.useState("");o.useEffect(()=>{Promise.all([l("tabmind:grok:apiKey"),l("tabmind:claude:apiKey"),l("tabmind:gemini:apiKey"),l("tabmind:openai:apiKey"),l("tabmind:openrouter:apiKey"),l("tabmind:cerebras:apiKey"),l("tabmind:provider"),q()]).then(([r,a,n,A,I,G,B,R])=>{r&&p(r),a&&b(a),n&&x(n),A&&u(A),I&&y(I),G&&j(G),B&&i(B),w(R)})},[]);const W=async()=>{await Promise.all([s("tabmind:provider",t),s("tabmind:grok:apiKey",d.trim()),s("tabmind:claude:apiKey",m.trim()),s("tabmind:gemini:apiKey",g.trim()),s("tabmind:openai:apiKey",h.trim()),s("tabmind:openrouter:apiKey",f.trim()),s("tabmind:cerebras:apiKey",k.trim())]),chrome.runtime.sendMessage({type:"TABMIND_SNAPSHOT_NOW"}).catch(()=>{}),C(!0),setTimeout(()=>C(!1),3e3)},M=()=>t==="grok"?!!d.trim():t==="claude"?!!m.trim():t==="openai"?!!h.trim():t==="openrouter"?!!f.trim():t==="cerebras"?!!k.trim():!!g.trim(),_=async()=>{await Promise.all([s("tabmind:grok:apiKey",""),s("tabmind:claude:apiKey",""),s("tabmind:gemini:apiKey",""),s("tabmind:openai:apiKey",""),s("tabmind:openrouter:apiKey",""),s("tabmind:cerebras:apiKey","")]),p(""),b(""),x(""),u(""),y(""),j("")},z=async()=>{const r=N.trim().toLowerCase().replace(/^https?:\/\//,"").split("/")[0];if(!r||v.includes(r))return;const a=[...v,r];w(a),await S(a),K("")},O=async r=>{const a=v.filter(n=>n!==r);w(a),await S(a)},D=async()=>{w(P),await S(P)};return e.jsxs(e.Fragment,{children:[e.jsx("style",{children:H}),e.jsxs("div",{style:{marginBottom:32},children:[e.jsxs("div",{style:{display:"flex",alignItems:"center",gap:10,marginBottom:6},children:[e.jsxs("svg",{width:"22",height:"22",viewBox:"0 0 24 24",fill:"none",children:[e.jsx("defs",{children:e.jsxs("linearGradient",{id:"og",x1:"0",y1:"0",x2:"24",y2:"24",children:[e.jsx("stop",{offset:"0%",stopColor:"#a78bfa"}),e.jsx("stop",{offset:"100%",stopColor:"#6d28d9"})]})}),e.jsx("circle",{cx:"12",cy:"12",r:"9",stroke:"url(#og)",strokeWidth:"1.4",opacity:"0.55"}),e.jsx("ellipse",{cx:"12",cy:"12",rx:"9",ry:"3.6",stroke:"url(#og)",strokeWidth:"1.2",opacity:"0.4",transform:"rotate(-28 12 12)"}),e.jsx("circle",{cx:"12",cy:"12",r:"2.6",fill:"url(#og)"}),e.jsx("circle",{cx:"20",cy:"6.5",r:"1.5",fill:"#a78bfa"})]}),e.jsx("h1",{style:{fontSize:22,fontWeight:760,letterSpacing:"-0.03em"},children:"TabMind"}),e.jsx("span",{className:"tag",children:"Settings"})]}),e.jsx("p",{style:{fontSize:13.5,color:"#64748b",letterSpacing:"-0.005em"},children:"Configure your AI session tracker"})]}),e.jsx("div",{className:"tab-bar",children:["api","blocklist","about"].map(r=>e.jsx("button",{type:"button",className:`tab${c===r?" active":""}`,onClick:()=>F(r),children:r==="api"?"AI Provider":r==="blocklist"?"Privacy":"About"},r))}),c==="api"&&e.jsxs("div",{className:"card",children:[e.jsx("div",{className:"card-title",children:"AI Provider"}),e.jsx("label",{className:"label",children:"Paste any API key - provider auto-detected"}),e.jsx("input",{className:"input",type:"password",placeholder:"Paste key: xai-... / gsk_... / sk-or-v1-... / csk-... / sk-ant-... / AIzaSy... / sk-...",autoComplete:"off",onChange:r=>T(r.target.value)}),e.jsxs("p",{className:"hint",style:{marginBottom:20},children:["Key prefix is recognized automatically. Active: ",e.jsx("strong",{style:{color:"#a78bfa"},children:t})]}),e.jsx("label",{className:"label",children:"Or choose provider manually"}),e.jsx("div",{className:"provider-grid",children:[{id:"openrouter",name:"OpenRouter",sub:"Llama 3.3 70B",free:!0},{id:"cerebras",name:"Cerebras",sub:"Llama 3.3 70B",free:!0},{id:"grok",name:"Grok/Groq",sub:"xAI or Groq key",free:!1},{id:"claude",name:"Claude",sub:"Haiku 4.5",free:!0},{id:"gemini",name:"Gemini",sub:"2.0 Flash",free:!0},{id:"openai",name:"OpenAI",sub:"GPT-4o mini",free:!1}].map(r=>e.jsxs("button",{type:"button",className:`provider-btn${t===r.id?" active":""}`,onClick:()=>i(r.id),children:[e.jsx("span",{className:"provider-name",children:r.name}),e.jsx("span",{className:"provider-sub",children:r.sub}),r.free&&e.jsx("span",{className:"free-badge",children:"free tier"})]},r.id))}),t==="openrouter"&&e.jsxs(e.Fragment,{children:[e.jsx("label",{className:"label",htmlFor:"openrouter-key",children:"OpenRouter API key"}),e.jsx("input",{id:"openrouter-key",className:"input",type:"password",value:f,onChange:r=>y(r.target.value),placeholder:"sk-or-v1-...",autoComplete:"off"}),e.jsxs("p",{className:"hint",children:["Key from ",e.jsx("a",{href:"https://openrouter.ai/keys",target:"_blank",rel:"noopener",children:"openrouter.ai/keys"}),". Uses ",e.jsx("strong",{style:{color:"#c4b5fd"},children:"Llama 3.3 70B"})," - free tier available, access to 300+ models."]})]}),t==="cerebras"&&e.jsxs(e.Fragment,{children:[e.jsx("label",{className:"label",htmlFor:"cerebras-key",children:"Cerebras API key"}),e.jsx("input",{id:"cerebras-key",className:"input",type:"password",value:k,onChange:r=>j(r.target.value),placeholder:"csk-...",autoComplete:"off"}),e.jsxs("p",{className:"hint",children:["Key from ",e.jsx("a",{href:"https://cloud.cerebras.ai/platform/api-keys",target:"_blank",rel:"noopener",children:"cloud.cerebras.ai"}),". Uses ",e.jsx("strong",{style:{color:"#c4b5fd"},children:"Llama 3.3 70B"})," - world's fastest inference, generous free tier."]})]}),t==="grok"&&e.jsxs(e.Fragment,{children:[e.jsx("label",{className:"label",htmlFor:"grok-key",children:"Grok or Groq API key"}),e.jsx("input",{id:"grok-key",className:"input",type:"password",value:d,onChange:r=>p(r.target.value),placeholder:"xai-... or gsk_...",autoComplete:"off"}),e.jsxs("p",{className:"hint",children:["Use an xAI key from ",e.jsx("a",{href:"https://console.x.ai",target:"_blank",rel:"noopener",children:"console.x.ai"})," or a Groq key from ",e.jsx("a",{href:"https://console.groq.com/keys",target:"_blank",rel:"noopener",children:"console.groq.com"}),". xAI uses ",e.jsx("strong",{style:{color:"#c4b5fd"},children:"grok-4.3"}),"; Groq uses ",e.jsx("strong",{style:{color:"#c4b5fd"},children:"Llama 3.3 70B"}),"."]})]}),t==="claude"&&e.jsxs(e.Fragment,{children:[e.jsx("label",{className:"label",htmlFor:"claude-key",children:"Anthropic API key"}),e.jsx("input",{id:"claude-key",className:"input",type:"password",value:m,onChange:r=>b(r.target.value),placeholder:"sk-ant-...",autoComplete:"off"}),e.jsxs("p",{className:"hint",children:["Get a free key from ",e.jsx("a",{href:"https://console.anthropic.com/settings/keys",target:"_blank",rel:"noopener",children:"console.anthropic.com"}),". Uses ",e.jsx("strong",{style:{color:"#c4b5fd"},children:"claude-haiku-4-5"})," - fastest model, generous free tier."]})]}),t==="gemini"&&e.jsxs(e.Fragment,{children:[e.jsx("label",{className:"label",htmlFor:"gemini-key",children:"Gemini API key"}),e.jsx("input",{id:"gemini-key",className:"input",type:"password",value:g,onChange:r=>x(r.target.value),placeholder:"AIzaSy...",autoComplete:"off"}),e.jsxs("p",{className:"hint",children:["Free key from ",e.jsx("a",{href:"https://aistudio.google.com/apikey",target:"_blank",rel:"noopener",children:"aistudio.google.com"})," - create a ",e.jsx("strong",{style:{color:"#c4b5fd"},children:"new project"})," to get free tier access."]})]}),t==="openai"&&e.jsxs(e.Fragment,{children:[e.jsx("label",{className:"label",htmlFor:"openai-key",children:"OpenAI API key"}),e.jsx("input",{id:"openai-key",className:"input",type:"password",value:h,onChange:r=>u(r.target.value),placeholder:"sk-...",autoComplete:"off"}),e.jsxs("p",{className:"hint",children:["Key from ",e.jsx("a",{href:"https://platform.openai.com/api-keys",target:"_blank",rel:"noopener",children:"platform.openai.com"}),". Uses gpt-4o-mini - costs ~$0.001 per session analysis."]})]}),L&&e.jsxs("div",{className:"status-ok",children:[e.jsx("svg",{width:"14",height:"14",viewBox:"0 0 24 24",fill:"none",children:e.jsx("path",{d:"M20 6L9 17l-5-5",stroke:"currentColor",strokeWidth:"2",strokeLinecap:"round",strokeLinejoin:"round"})}),"Saved - analyzing your tabs now..."]}),e.jsxs("div",{style:{display:"flex",gap:10,marginTop:20},children:[e.jsxs("button",{type:"button",className:"btn-save",onClick:W,disabled:!M(),children:[e.jsxs("svg",{width:"14",height:"14",viewBox:"0 0 24 24",fill:"none",children:[e.jsx("path",{d:"M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z",stroke:"currentColor",strokeWidth:"1.8",strokeLinejoin:"round"}),e.jsx("path",{d:"M17 21v-8H7v8M7 3v5h8",stroke:"currentColor",strokeWidth:"1.8",strokeLinecap:"round",strokeLinejoin:"round"})]}),"Save & analyze now"]}),(d||m||g||h||f||k)&&e.jsx("button",{type:"button",className:"btn-danger",onClick:_,children:"Clear keys"})]})]}),c==="blocklist"&&e.jsxs("div",{className:"card",children:[e.jsx("div",{className:"card-title",children:"Privacy - blocked domains"}),e.jsx("p",{style:{fontSize:12.5,color:"#4b5568",lineHeight:1.6,marginBottom:20},children:"TabMind will never extract page text from these domains. Tab titles and URLs are still used for session summaries."}),e.jsx("div",{style:{display:"flex",flexWrap:"wrap",gap:6,marginBottom:16},children:v.map(r=>e.jsxs("button",{type:"button",className:"blocklist-tag",onClick:()=>O(r),title:"Click to remove",children:[r," ",e.jsx("span",{style:{opacity:.5,fontSize:10},children:"x"})]},r))}),e.jsxs("div",{style:{display:"flex",gap:8},children:[e.jsx("input",{className:"input",style:{fontFamily:"inherit",flex:1},placeholder:"example.com",value:N,onChange:r=>K(r.target.value),onKeyDown:r=>r.key==="Enter"&&z()}),e.jsx("button",{type:"button",className:"btn-save",style:{marginTop:0,flexShrink:0},onClick:z,disabled:!N.trim(),children:"Add"})]}),e.jsx("button",{type:"button",onClick:D,style:{marginTop:14,fontSize:12,color:"#4b5568",background:"none",border:"none",cursor:"pointer",padding:0},children:"Reset to defaults"})]}),c==="about"&&e.jsxs("div",{className:"card",children:[e.jsx("div",{className:"card-title",children:"Session settings"}),[["Snapshot interval","90 seconds"],["History kept","50 sessions"],["Session reset","5 min idle"],["Notes storage","chrome.storage.sync"],["Keys storage","chrome.storage.sync (encrypted by Chrome)"],["Snapshots storage","chrome.storage.local"],["Tab grouping","automatic, via chrome.tabGroups"],["Keyboard shortcut","Cmd+Shift+K / Ctrl+Shift+K"]].map(([r,a])=>e.jsxs("div",{className:"row",children:[e.jsx("span",{className:"row-key",children:r}),e.jsx("span",{className:"row-val",children:a})]},r)),e.jsx("div",{style:{display:"flex",gap:16,marginTop:20},children:[{label:"Source code",href:"https://github.com/thribhuvan003/tabmind"},{label:"Report issue",href:"https://github.com/thribhuvan003/tabmind/issues"}].map(({label:r,href:a})=>e.jsx("a",{href:a,target:"_blank",rel:"noopener noreferrer",style:{fontSize:12.5,color:"#4b5568",textDecoration:"none"},onMouseEnter:n=>{n.currentTarget.style.color="#94a3b8"},onMouseLeave:n=>{n.currentTarget.style.color="#4b5568"},children:r},r))})]})]})}E.createRoot(document.getElementById("root")).render(e.jsx(U.StrictMode,{children:e.jsx($,{})}));

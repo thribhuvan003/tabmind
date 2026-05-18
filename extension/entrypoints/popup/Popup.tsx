@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getLatestSession, storageGet } from "../../lib/storage";
+import { getLatestSession, getActiveApiKey } from "../../lib/storage";
 import type { SessionSnapshot } from "../../lib/types";
 
 const CSS = `
@@ -60,11 +60,10 @@ export function Popup() {
   useEffect(() => {
     Promise.all([
       getLatestSession(),
-      storageGet("tabmind:gemini:apiKey"),
-      storageGet("tabmind:openai:apiKey"),
-    ]).then(([s, gKey, oKey]) => {
+      getActiveApiKey(),
+    ]).then(([s, activeKey]) => {
       setSession(s);
-      setHasKey(Boolean(gKey || oKey));
+      setHasKey(Boolean(activeKey.key));
     });
   }, []);
 
@@ -144,17 +143,17 @@ export function Popup() {
             </div>
             <p style={{ fontSize: 13, color: "rgba(243,244,247,0.8)", fontWeight: 550, marginBottom: 4 }}>Add your API key</p>
             <p style={{ fontSize: 11.5, color: "rgba(148,163,184,0.7)", lineHeight: 1.5, marginBottom: 16 }}>
-              Free Gemini key from Google AI Studio — takes 30 seconds.
+              Free Gemini key from Google AI Studio - takes 30 seconds.
             </p>
             <button type="button" className="btn-ghost" onClick={() => chrome.runtime.openOptionsPage()}>
-              Open settings →
+              Open settings
             </button>
           </div>
 
         ) : session ? (
           <>
             <div style={{ marginBottom: 12 }}>
-              <div className="eyebrow" style={{ marginBottom: 6 }}>Working on · {mins}m</div>
+              <div className="eyebrow" style={{ marginBottom: 6 }}>Working on - {mins}m</div>
               <div style={{ fontSize: 15, fontWeight: 650, letterSpacing: "-0.02em", color: "#f3f4f7", marginBottom: 6 }}>
                 {session.topic}
               </div>
@@ -196,7 +195,7 @@ export function Popup() {
         ) : (
           <div style={{ padding: "6px 0 8px" }}>
             <p style={{ fontSize: 13, color: "rgba(148,163,184,0.6)", fontStyle: "italic", lineHeight: 1.55, marginBottom: 14 }}>
-              Watching your tabs silently…<br />First snapshot in up to 90 seconds.
+              Watching your tabs silently...<br />First snapshot in up to 90 seconds.
             </p>
             <button type="button" className="btn-primary" onClick={() => {
               chrome.runtime.sendMessage({ type: "TABMIND_SNAPSHOT_NOW" });
