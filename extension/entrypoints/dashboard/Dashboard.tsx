@@ -418,6 +418,7 @@ export function Dashboard() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [tasks, setTasks] = useState<UserTask[]>([]);
   const [activeSession, setActiveSession] = useState<SessionSnapshot | null>(null);
+  const [activeFolder, setActiveFolder] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -464,7 +465,7 @@ export function Dashboard() {
           </div>
           <div className="db-header-right">
             <button type="button" className="db-close-btn" onClick={() => window.close()}>
-              Close x
+              Close
             </button>
           </div>
         </header>
@@ -539,31 +540,67 @@ export function Dashboard() {
 
           {/* Note folders */}
           <div className="db-card">
-            <div className="db-card-title">Note Collections</div>
-            <div className="db-note-folders">
-              {NOTE_FOLDERS.map((folder) => {
-                const folderNotes = notes.filter(n => n.category === folder.key);
-                return (
-                  <div key={folder.key} className="db-note-folder">
-                    <div
-                      className="db-folder-color"
-                      style={{ background: `${folder.color}22`, border: `1px solid ${folder.color}44` }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path
-                          d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
-                          stroke={folder.color} strokeWidth="1.6" strokeLinejoin="round"
-                        />
-                      </svg>
-                    </div>
-                    <div className="db-folder-name">{folder.label}</div>
-                    <div className="db-folder-count">
-                      {folderNotes.length} {folderNotes.length === 1 ? "note" : "notes"}
-                    </div>
-                  </div>
-                );
-              })}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <div className="db-card-title" style={{ marginBottom: 0 }}>
+                {activeFolder ? NOTE_FOLDERS.find(f => f.key === activeFolder)?.label + " Notes" : "Note Collections"}
+              </div>
+              {activeFolder && (
+                <button type="button" onClick={() => setActiveFolder(null)}
+                  style={{ fontSize: 11, color: "var(--c-text-muted)", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}>
+                  ← All folders
+                </button>
+              )}
             </div>
+            {!activeFolder ? (
+              <div className="db-note-folders">
+                {NOTE_FOLDERS.map((folder) => {
+                  const folderNotes = notes.filter(n => n.category === folder.key);
+                  return (
+                    <div key={folder.key} className="db-note-folder"
+                      role="button" tabIndex={0}
+                      onClick={() => setActiveFolder(folder.key)}
+                      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setActiveFolder(folder.key)}
+                    >
+                      <div
+                        className="db-folder-color"
+                        style={{ background: `${folder.color}22`, border: `1px solid ${folder.color}44` }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
+                            stroke={folder.color} strokeWidth="1.6" strokeLinejoin="round"
+                          />
+                        </svg>
+                      </div>
+                      <div className="db-folder-name">{folder.label}</div>
+                      <div className="db-folder-count">
+                        {folderNotes.length} {folderNotes.length === 1 ? "note" : "notes"}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {notes.filter(n => n.category === activeFolder).length === 0 ? (
+                  <div className="db-empty" style={{ padding: "16px 0" }}>No notes in this folder yet.</div>
+                ) : (
+                  notes.filter(n => n.category === activeFolder).map(note => (
+                    <div key={note.id} style={{
+                      padding: "10px 12px", borderRadius: "var(--r-md)",
+                      background: "rgba(255,255,255,0.022)", border: "1px solid var(--c-border)",
+                    }}>
+                      <div style={{ fontSize: 12, color: "var(--c-text-dim)", lineHeight: 1.5, wordBreak: "break-word" }}>
+                        {note.text}
+                      </div>
+                      <div style={{ fontSize: 9.5, color: "var(--c-text-trace)", marginTop: 4, fontVariantNumeric: "tabular-nums" }}>
+                        {new Date(note.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </main>
 

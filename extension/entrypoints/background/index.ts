@@ -26,7 +26,6 @@ type PipelineResult = { snapshot: import("../../lib/types").SessionSnapshot | nu
 
 async function snapshotPipeline(): Promise<PipelineResult> {
   try {
-    const { provider } = await getActiveApiKey();
     const snap = await runSessionSnapshot();
     if (!snap) return { snapshot: null, error: "No trackable tabs found or API key missing." };
     await applyTabGroups(snap.groups);
@@ -148,7 +147,7 @@ export default defineBackground(() => {
     scheduleRolloverAlarm();
     // Check for rollover tasks on browser start (handles overnight).
     await doRollover();
-    snapshotPipeline();
+    snapshotPipeline().catch(() => {});
   });
 
   chrome.alarms.onAlarm.addListener(async (alarm) => {
@@ -213,8 +212,18 @@ export default defineBackground(() => {
       return true;
     }
     if (msg?.type === "TABMIND_OPEN_DASHBOARD") {
-      try { chrome.tabs.create({ url: chrome.runtime.getURL("dashboard.html") }); } catch { /* ignore */ }
-      sendResponse({ ok: true });
+      (async () => {
+        try {
+          const dashUrl = chrome.runtime.getURL("dashboard.html");
+          const existing = await chrome.tabs.query({ url: dashUrl });
+          if (existing.length > 0 && existing[0].id != null) {
+            chrome.tabs.update(existing[0].id, { active: true });
+          } else {
+            chrome.tabs.create({ url: dashUrl });
+          }
+        } catch { /* ignore */ }
+        sendResponse({ ok: true });
+      })();
       return true;
     }
   });
