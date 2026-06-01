@@ -116,6 +116,18 @@ describe("background alarms", () => {
     );
   });
 
+  it("starts minimized and opens Settings on first install only", async () => {
+    const { storageSet } = await import("../lib/storage");
+
+    await listeners.installed[0]({ reason: "install" });
+    expect(storageSet).toHaveBeenCalledWith("tabmind:widget:minimized", true);
+    expect(chrome.runtime.openOptionsPage).toHaveBeenCalled();
+
+    vi.clearAllMocks();
+    await listeners.installed[0]({ reason: "update" });
+    expect(chrome.runtime.openOptionsPage).not.toHaveBeenCalled();
+  });
+
   it("recreates the snapshot alarm at 90 seconds after browser startup", async () => {
     await listeners.startup[0]();
 

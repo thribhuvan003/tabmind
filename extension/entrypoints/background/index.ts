@@ -130,12 +130,19 @@ async function ensureSessionStart() {
 }
 
 export default defineBackground(() => {
-  chrome.runtime.onInstalled.addListener(async () => {
+  chrome.runtime.onInstalled.addListener(async (details) => {
     await migrateNotesIfNeeded();
     await storageSet("tabmind:session:startedAt", Date.now());
     chrome.alarms.create(ALARM_SNAPSHOT, { periodInMinutes: SNAPSHOT_INTERVAL_MINUTES });
     scheduleRolloverAlarm();
     try { chrome.idle?.setDetectionInterval?.(IDLE_RESET_MIN * 60); } catch { /* ignore */ }
+
+    // First run: start as the minimized orb (not the full panel on every page)
+    // and open Settings so the user can add an API key.
+    if (details?.reason === "install") {
+      await storageSet("tabmind:widget:minimized", true);
+      try { chrome.runtime.openOptionsPage(); } catch { /* ignore */ }
+    }
   });
 
   chrome.runtime.onStartup.addListener(async () => {
