@@ -13,7 +13,7 @@ export function initSentry(context: "content" | "background") {
   try {
     Sentry.init({
       dsn: SENTRY_DSN,
-      release: "tabmind@0.1.0",
+      release: "tabmind@1.0.0",
       environment: "production",
       tracesSampleRate: 0,
       defaultIntegrations: false,
