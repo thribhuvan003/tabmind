@@ -5,7 +5,7 @@ import { parseAiJson } from "./parse";
 const ENDPOINT = "https://api.anthropic.com/v1/messages";
 
 export const claudeAdapter: AiAdapter = {
-  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string): Promise<AiResult> {
+  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult> {
     const prompt = buildSessionPrompt(tabs, sessionMinutes);
     const res = await fetch(ENDPOINT, {
       method: "POST",
@@ -19,6 +19,7 @@ export const claudeAdapter: AiAdapter = {
         max_tokens: 1024,
         messages: [{ role: "user", content: prompt }],
       }),
+      signal,
     });
     if (!res.ok) throw new Error(`Claude ${res.status}: ${await res.text().catch(() => "")}`);
     const data = await res.json();

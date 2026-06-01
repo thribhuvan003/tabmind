@@ -22,7 +22,8 @@ export async function analyzeSession(
   provider: AiProvider,
   apiKey: string,
   tabs: AiInputTab[],
-  sessionMinutes: number
+  sessionMinutes: number,
+  signal?: AbortSignal
 ): Promise<AiResult> {
-  return ADAPTERS[provider].analyze(tabs, sessionMinutes, apiKey);
+  return ADAPTERS[provider].analyze(tabs, sessionMinutes, apiKey, signal);
 }

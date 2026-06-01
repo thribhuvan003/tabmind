@@ -11,6 +11,13 @@ import type { TabSnapshot, SessionSnapshot } from "./types";
 const MAX_EXCERPT = 4000;
 const EXCERPT_TIMEOUT_MS = 1500;
 
+/** Bound the payload sent to the AI so heavy users (many tabs) don't blow past
+ *  free-tier token limits, drive up cost, or trigger 429s. */
+const MAX_AI_TABS = 25;
+const EXCERPT_CHAR_BUDGET = 24_000;
+/** Hard ceiling on a single AI request so a hung provider can't block the pipeline. */
+const AI_TIMEOUT_MS = 20_000;
+
 const SKIP_PROTOCOLS = ["chrome://", "chrome-extension://", "edge://", "about:", "file://"];
 
 function isTrackableTab(t: chrome.tabs.Tab): t is chrome.tabs.Tab & { id: number; url: string } {
@@ -73,14 +80,24 @@ export async function runSessionSnapshot(): Promise<SessionSnapshot | null> {
 
   const sessionMinutes = Math.max(1, Math.round((Date.now() - startedAt) / 60_000));
 
-  const aiInput = tabs.map((t) => ({
-    id: t.id,
-    title: t.title,
-    url: t.url,
-    excerpt: t.excerpt,
-  }));
+  // Cap tab count and total excerpt size so the prompt stays within free-tier limits.
+  // Titles + URLs are always kept (cheap, useful for grouping); only excerpts are budgeted.
+  let usedChars = 0;
+  const aiInput = tabs.slice(0, MAX_AI_TABS).map((t) => {
+    const room = Math.max(0, EXCERPT_CHAR_BUDGET - usedChars);
+    const excerpt = t.excerpt.slice(0, room);
+    usedChars += excerpt.length;
+    return { id: t.id, title: t.title, url: t.url, excerpt };
+  });
 
-  const result = await analyzeSession(provider, key, aiInput, sessionMinutes);
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), AI_TIMEOUT_MS);
+  let result;
+  try {
+    result = await analyzeSession(provider, key, aiInput, sessionMinutes, ac.signal);
+  } finally {
+    clearTimeout(timer);
+  }
 
   // attach group labels back to tabs for UI display
   const idToGroup = new Map<number, string>();

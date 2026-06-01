@@ -17,5 +17,5 @@ export interface AiResult {
 }
 
 export interface AiAdapter {
-  analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string): Promise<AiResult>;
+  analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult>;
 }

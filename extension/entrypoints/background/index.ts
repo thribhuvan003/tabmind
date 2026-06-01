@@ -24,7 +24,13 @@ async function broadcastToAll(type: string) {
 
 type PipelineResult = { snapshot: import("../../lib/types").SessionSnapshot | null; error?: string };
 
+/** Guard against overlapping snapshots: a slow AI call (>90s) must not let the
+ *  next alarm start a second concurrent run (double cost, racing tab-group writes). */
+let snapshotInFlight = false;
+
 async function snapshotPipeline(): Promise<PipelineResult> {
+  if (snapshotInFlight) return { snapshot: null, error: "A snapshot is already running." };
+  snapshotInFlight = true;
   try {
     const snap = await runSessionSnapshot();
     if (!snap) return { snapshot: null, error: "No trackable tabs found or API key missing." };
@@ -63,6 +69,8 @@ async function snapshotPipeline(): Promise<PipelineResult> {
     }
 
     return { snapshot: null, error: friendly };
+  } finally {
+    snapshotInFlight = false;
   }
 }
 

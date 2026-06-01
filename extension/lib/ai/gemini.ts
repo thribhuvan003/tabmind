@@ -7,7 +7,7 @@ const ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
 export const geminiAdapter: AiAdapter = {
-  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string): Promise<AiResult> {
+  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult> {
     const prompt = buildSessionPrompt(tabs, sessionMinutes);
     const res = await fetch(ENDPOINT, {
       method: "POST",
@@ -23,6 +23,7 @@ export const geminiAdapter: AiAdapter = {
           responseMimeType: "application/json",
         },
       }),
+      signal,
     });
     if (!res.ok) throw new Error(`Gemini ${res.status}: ${await res.text().catch(() => "")}`);
     const data = await res.json();

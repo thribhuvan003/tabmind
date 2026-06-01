@@ -5,7 +5,7 @@ import { parseAiJson } from "./parse";
 const ENDPOINT = "https://api.openai.com/v1/chat/completions";
 
 export const openaiAdapter: AiAdapter = {
-  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string): Promise<AiResult> {
+  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult> {
     const prompt = buildSessionPrompt(tabs, sessionMinutes);
     const res = await fetch(ENDPOINT, {
       method: "POST",
@@ -20,6 +20,7 @@ export const openaiAdapter: AiAdapter = {
         response_format: { type: "json_object" },
         messages: [{ role: "user", content: prompt }],
       }),
+      signal,
     });
     if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await res.text().catch(() => "")}`);
     const data = await res.json();

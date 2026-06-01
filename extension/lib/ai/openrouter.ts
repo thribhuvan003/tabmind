@@ -6,7 +6,7 @@ const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "meta-llama/llama-3.3-70b-instruct:free";
 
 export const openrouterAdapter: AiAdapter = {
-  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string): Promise<AiResult> {
+  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult> {
     const prompt = buildSessionPrompt(tabs, sessionMinutes);
     const res = await fetch(ENDPOINT, {
       method: "POST",
@@ -23,6 +23,7 @@ export const openrouterAdapter: AiAdapter = {
         response_format: { type: "json_object" },
         messages: [{ role: "user", content: prompt }],
       }),
+      signal,
     });
     if (!res.ok) throw new Error(`OpenRouter ${res.status}: ${await res.text().catch(() => "")}`);
     const data = await res.json();

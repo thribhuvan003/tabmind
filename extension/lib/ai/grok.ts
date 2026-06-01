@@ -6,7 +6,7 @@ const XAI_ENDPOINT = "https://api.x.ai/v1/chat/completions";
 const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 
 export const grokAdapter: AiAdapter = {
-  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string): Promise<AiResult> {
+  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult> {
     const prompt = buildSessionPrompt(tabs, sessionMinutes);
     const isXaiKey = apiKey.startsWith("xai-");
     const res = await fetch(isXaiKey ? XAI_ENDPOINT : GROQ_ENDPOINT, {
@@ -22,6 +22,7 @@ export const grokAdapter: AiAdapter = {
         response_format: { type: "json_object" },
         messages: [{ role: "user", content: prompt }],
       }),
+      signal,
     });
     if (!res.ok) {
       const label = isXaiKey ? "xAI" : "Groq";
