@@ -424,7 +424,7 @@ export function Options() {
             ["History kept", "50 sessions"],
             ["Session reset", "5 min idle"],
             ["Notes storage", "chrome.storage.local"],
-            ["Keys storage", "chrome.storage.sync (encrypted by Chrome)"],
+            ["Keys storage", "chrome.storage.sync (plaintext, synced to your Google account)"],
             ["Snapshots storage", "chrome.storage.local"],
             ["Tab grouping", "automatic, via chrome.tabGroups"],
             ["Keyboard shortcut", "Cmd+Shift+K / Ctrl+Shift+K"],
