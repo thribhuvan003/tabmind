@@ -73,8 +73,12 @@ export async function getSessionHistory() {
 export async function saveSession(snapshot: StorageSchema["tabmind:session:latest"]) {
   if (!snapshot) return;
   await storageSet("tabmind:session:latest", snapshot);
+  // History keeps 50 sessions; persisting each tab's full page excerpt would push
+  // chrome.storage.local toward its quota over weeks of use. Excerpts are only
+  // needed at analysis time and nothing reads them from history, so drop them here.
+  const lite = { ...snapshot, tabs: snapshot.tabs.map((t) => ({ ...t, excerpt: "" })) };
   const history = (await storageGet("tabmind:session:history")) ?? [];
-  history.unshift(snapshot);
+  history.unshift(lite);
   await storageSet("tabmind:session:history", history.slice(0, 50));
 }
 
