@@ -839,7 +839,7 @@ function GoalsTab({
   onAddTasksToToday,
 }: {
   goals: Goal[];
-  onAddGoal: (title: string) => Promise<void>;
+  onAddGoal: (title: string) => Promise<string>;
   onDeleteGoal: (id: string) => Promise<void>;
   onSetGoalTasks: (goalId: string, tasks: import("../../lib/types").GoalTask[]) => Promise<void>;
   onToggleGoalTask: (goalId: string, taskId: string) => Promise<void>;
@@ -853,8 +853,9 @@ function GoalsTab({
     if (!title) return;
     setBreaking(true);
     try {
-      // First save the goal
-      await onAddGoal(title);
+      // Save the goal first; addGoal returns the new goal's id so we don't have
+      // to guess which entry it is in the list.
+      const newGoalId = await onAddGoal(title);
       // Then request AI breakdown - retry in case service worker is sleeping
       let res: { tasks?: string[] } | null = null;
       for (let i = 0; i < 3; i++) {
@@ -865,21 +866,12 @@ function GoalsTab({
       }
       const taskTexts: string[] = res?.tasks ?? [];
       if (taskTexts.length > 0) {
-        // Get the newly added goal (it'll be first in the list)
-        // We'll update via the setGoalTasks callback
-        // But we need the goal id - we can find it from the goals list after add
-        // Instead, we pass the tasks and let the store handle the goal lookup
-        // Re-fetch goals via the store
-        const goalsList: Goal[] = useWidgetStore.getState().goals;
-        const newGoal = goalsList[0]; // just added by onAddGoal, store is already updated
-        if (newGoal) {
-          const goalTasks = taskTexts.map((text) => ({
-            id: crypto.randomUUID(),
-            text,
-            done: false,
-          }));
-          await onSetGoalTasks(newGoal.id, goalTasks);
-        }
+        const goalTasks = taskTexts.map((text) => ({
+          id: crypto.randomUUID(),
+          text,
+          done: false,
+        }));
+        await onSetGoalTasks(newGoalId, goalTasks);
       }
     } catch {
       // ignore

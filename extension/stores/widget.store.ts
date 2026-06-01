@@ -79,7 +79,7 @@ interface WidgetState {
   deleteGlobalNote: (id: string) => Promise<void>;
   pinGlobalNote: (id: string, pinned: boolean) => Promise<void>;
   loadGoals: () => Promise<void>;
-  addGoal: (title: string) => Promise<void>;
+  addGoal: (title: string) => Promise<string>;
   deleteGoal: (id: string) => Promise<void>;
   setGoalTasks: (goalId: string, tasks: import("../lib/types").GoalTask[]) => Promise<void>;
   toggleGoalTask: (goalId: string, taskId: string) => Promise<void>;
@@ -249,9 +249,10 @@ export const useWidgetStore = create<WidgetState>((set, get) => ({
   },
 
   addGoal: async (title) => {
-    await dbAddGoal(title);
+    const goal = await dbAddGoal(title);
     const goals = await getGoals();
     set({ goals });
+    return goal.id;
   },
 
   deleteGoal: async (id) => {

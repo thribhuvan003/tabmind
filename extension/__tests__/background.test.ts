@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 type Listener<T extends (...args: any[]) => any> = T[];
 
 const listeners: {
-  installed: Listener<() => void | Promise<void>>;
+  installed: Listener<(details?: { reason: string }) => void | Promise<void>>;
   startup: Listener<() => void | Promise<void>>;
   alarms: Listener<(alarm: { name: string }) => void | Promise<void>>;
   messages: Listener<(msg: any, sender: any, sendResponse: (value: any) => void) => boolean | void>;
