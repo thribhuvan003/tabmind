@@ -6,8 +6,7 @@ const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "meta-llama/llama-3.3-70b-instruct:free";
 
 export const openrouterAdapter: AiAdapter = {
-  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult> {
-    const prompt = buildSessionPrompt(tabs, sessionMinutes);
+  async complete(prompt: string, apiKey: string, signal?: AbortSignal): Promise<string> {
     const res = await fetch(ENDPOINT, {
       method: "POST",
       headers: {
@@ -27,7 +26,9 @@ export const openrouterAdapter: AiAdapter = {
     });
     if (!res.ok) throw new Error(`OpenRouter ${res.status}: ${await res.text().catch(() => "")}`);
     const data = await res.json();
-    const raw = data?.choices?.[0]?.message?.content ?? "{}";
-    return parseAiJson(raw);
+    return data?.choices?.[0]?.message?.content ?? "{}";
+  },
+  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult> {
+    return parseAiJson(await this.complete(buildSessionPrompt(tabs, sessionMinutes), apiKey, signal));
   },
 };

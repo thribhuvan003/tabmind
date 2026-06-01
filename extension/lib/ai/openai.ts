@@ -5,8 +5,7 @@ import { parseAiJson } from "./parse";
 const ENDPOINT = "https://api.openai.com/v1/chat/completions";
 
 export const openaiAdapter: AiAdapter = {
-  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult> {
-    const prompt = buildSessionPrompt(tabs, sessionMinutes);
+  async complete(prompt: string, apiKey: string, signal?: AbortSignal): Promise<string> {
     const res = await fetch(ENDPOINT, {
       method: "POST",
       headers: {
@@ -24,7 +23,9 @@ export const openaiAdapter: AiAdapter = {
     });
     if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await res.text().catch(() => "")}`);
     const data = await res.json();
-    const raw = data?.choices?.[0]?.message?.content ?? "{}";
-    return parseAiJson(raw);
+    return data?.choices?.[0]?.message?.content ?? "{}";
+  },
+  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult> {
+    return parseAiJson(await this.complete(buildSessionPrompt(tabs, sessionMinutes), apiKey, signal));
   },
 };

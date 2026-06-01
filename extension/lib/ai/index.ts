@@ -27,3 +27,13 @@ export async function analyzeSession(
 ): Promise<AiResult> {
   return ADAPTERS[provider].analyze(tabs, sessionMinutes, apiKey, signal);
 }
+
+/** Run a one-off prompt against the active provider, returning the raw model text. */
+export async function completePrompt(
+  provider: AiProvider,
+  apiKey: string,
+  prompt: string,
+  signal?: AbortSignal
+): Promise<string> {
+  return ADAPTERS[provider].complete(prompt, apiKey, signal);
+}

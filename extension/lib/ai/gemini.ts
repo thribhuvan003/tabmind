@@ -7,8 +7,7 @@ const ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
 export const geminiAdapter: AiAdapter = {
-  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult> {
-    const prompt = buildSessionPrompt(tabs, sessionMinutes);
+  async complete(prompt: string, apiKey: string, signal?: AbortSignal): Promise<string> {
     const res = await fetch(ENDPOINT, {
       method: "POST",
       headers: {
@@ -27,7 +26,9 @@ export const geminiAdapter: AiAdapter = {
     });
     if (!res.ok) throw new Error(`Gemini ${res.status}: ${await res.text().catch(() => "")}`);
     const data = await res.json();
-    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
-    return parseAiJson(raw);
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+  },
+  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult> {
+    return parseAiJson(await this.complete(buildSessionPrompt(tabs, sessionMinutes), apiKey, signal));
   },
 };

@@ -6,8 +6,7 @@ const XAI_ENDPOINT = "https://api.x.ai/v1/chat/completions";
 const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 
 export const grokAdapter: AiAdapter = {
-  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult> {
-    const prompt = buildSessionPrompt(tabs, sessionMinutes);
+  async complete(prompt: string, apiKey: string, signal?: AbortSignal): Promise<string> {
     const isXaiKey = apiKey.startsWith("xai-");
     const res = await fetch(isXaiKey ? XAI_ENDPOINT : GROQ_ENDPOINT, {
       method: "POST",
@@ -29,7 +28,9 @@ export const grokAdapter: AiAdapter = {
       throw new Error(`${label} ${res.status}: ${await res.text().catch(() => "")}`);
     }
     const data = await res.json();
-    const raw = data?.choices?.[0]?.message?.content ?? "{}";
-    return parseAiJson(raw);
+    return data?.choices?.[0]?.message?.content ?? "{}";
+  },
+  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult> {
+    return parseAiJson(await this.complete(buildSessionPrompt(tabs, sessionMinutes), apiKey, signal));
   },
 };

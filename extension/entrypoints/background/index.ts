@@ -1,4 +1,5 @@
 import { runSessionSnapshot } from "../../lib/session-engine";
+import { completePrompt } from "../../lib/ai";
 import { storageSet, storageGet, getLatestSession, getActiveApiKey, migrateNotesIfNeeded } from "../../lib/storage";
 import { applyTabGroups } from "../../lib/tab-groups";
 import { rolloverOverdueTasks, mergeAiTodos, msUntilMidnight } from "../../lib/tasks";
@@ -80,27 +81,16 @@ async function goalBreakdownPipeline(goalText: string): Promise<{ tasks: string[
     const { provider, key } = await getActiveApiKey();
     if (!key) return { tasks: [] };
     const prompt = `Break down this goal into exactly 5 concrete, actionable tasks (each doable in under 2 hours). Be specific. Return JSON only.\nGoal: "${goalText}"\nFormat: {"tasks": ["Task 1", "Task 2", "Task 3", "Task 4", "Task 5"]}`;
-    let raw = "{}";
-    if (provider === "grok") {
-      const isXaiKey = key.startsWith("xai-");
-      const r = await fetch(isXaiKey ? "https://api.x.ai/v1/chat/completions" : "https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ model: isXaiKey ? "grok-2-latest" : "llama-3.3-70b-versatile", temperature: 0.5, max_tokens: 400, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });
-      raw = (await r.json())?.choices?.[0]?.message?.content ?? "{}";
-    } else if (provider === "claude") {
-      const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" }, body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 400, messages: [{ role: "user", content: prompt }] }) });
-      raw = (await r.json())?.content?.[0]?.text ?? "{}";
-    } else if (provider === "gemini") {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.5, maxOutputTokens: 400, responseMimeType: "application/json" } }) });
-      raw = (await r.json())?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
-    } else if (provider === "openrouter") {
-      const r = await fetch("https://openrouter.ai/api/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "HTTP-Referer": "https://github.com/thribhuvan003/tabmind", "X-Title": "TabMind" }, body: JSON.stringify({ model: "meta-llama/llama-3.3-70b-instruct:free", temperature: 0.5, max_tokens: 400, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });
-      raw = (await r.json())?.choices?.[0]?.message?.content ?? "{}";
-    } else if (provider === "cerebras") {
-      const r = await fetch("https://api.cerebras.ai/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ model: "llama-3.3-70b", temperature: 0.5, max_tokens: 400, messages: [{ role: "user", content: prompt }] }) });
-      raw = (await r.json())?.choices?.[0]?.message?.content ?? "{}";
-    } else {
-      const r = await fetch("https://api.openai.com/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify({ model: "gpt-4o-mini", temperature: 0.5, max_tokens: 400, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });
-      raw = (await r.json())?.choices?.[0]?.message?.content ?? "{}";
+
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 20_000);
+    let raw: string;
+    try {
+      raw = await completePrompt(provider, key, prompt, ac.signal);
+    } finally {
+      clearTimeout(timer);
     }
+
     const parsed = JSON.parse(raw);
     const tasks = Array.isArray(parsed.tasks) ? parsed.tasks.filter((t: unknown) => typeof t === "string") : [];
     return { tasks: tasks.slice(0, 7) };

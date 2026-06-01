@@ -5,8 +5,7 @@ import { parseAiJson } from "./parse";
 const ENDPOINT = "https://api.anthropic.com/v1/messages";
 
 export const claudeAdapter: AiAdapter = {
-  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult> {
-    const prompt = buildSessionPrompt(tabs, sessionMinutes);
+  async complete(prompt: string, apiKey: string, signal?: AbortSignal): Promise<string> {
     const res = await fetch(ENDPOINT, {
       method: "POST",
       headers: {
@@ -23,7 +22,9 @@ export const claudeAdapter: AiAdapter = {
     });
     if (!res.ok) throw new Error(`Claude ${res.status}: ${await res.text().catch(() => "")}`);
     const data = await res.json();
-    const raw = data?.content?.[0]?.text ?? "{}";
-    return parseAiJson(raw);
+    return data?.content?.[0]?.text ?? "{}";
+  },
+  async analyze(tabs: AiInputTab[], sessionMinutes: number, apiKey: string, signal?: AbortSignal): Promise<AiResult> {
+    return parseAiJson(await this.complete(buildSessionPrompt(tabs, sessionMinutes), apiKey, signal));
   },
 };
