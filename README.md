@@ -1,205 +1,127 @@
+<div align="center">
+
 # TabMind
 
-> **AI-powered session tracker for Chrome** — understands what you're working on, extracts tasks, and keeps everything local.
+**A local-first AI session tracker for Chrome.**
 
-TabMind runs silently in the background, reads your open tabs every 90 seconds, and uses your chosen AI provider to produce a plain-English summary of your work session, pull out action items, and group related tabs automatically. Everything is stored **on your machine only** — no servers, no accounts, no tracking.
+TabMind watches your open tabs, works out what you're actually doing, and turns
+it into sessions, tasks, and notes — all stored on your machine.
 
----
+[![WXT](https://img.shields.io/badge/WXT-0.19-67d55e?style=flat-square)](https://wxt.dev)
+[![Manifest V3](https://img.shields.io/badge/Chrome-Manifest_V3-4285f4?style=flat-square&logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
+[![React](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![Tests](https://img.shields.io/badge/tests-32_Vitest_cases-16a34a?style=flat-square&logo=vitest&logoColor=white)](#testing)
 
-## Features
-
-- **Session awareness** — auto-detects your current focus: "Debugging a React hydration issue" not just a list of URLs
-- **Floating widget** — draggable, minimizable panel injected on every page; shows topic, narrative, tasks, notes, and goals
-- **Task manager** — add tasks manually or let AI extract them from your tabs; supports categories, time estimates, scheduling (Today / Tomorrow / Someday), and daily rollover
-- **Per-URL notes** — jot anything against the current page; persists across navigations
-- **Quick notes** — global note capture with Work / Personal / Ideas / Learning categories; visible in the Dashboard
-- **Goals + AI breakdown** — type a goal, get 5 concrete sub-tasks back from the AI in seconds
-- **Dashboard** — full-page view of session history, week calendar, note folders, and goal progress
-- **Tab grouping** — automatically groups Chrome tabs by topic using `chrome.tabGroups`
-- **6 AI providers** — OpenRouter, Cerebras, Grok/Groq, Claude, Gemini, OpenAI (all with free tiers available)
-- **Privacy controls** — domain blocklist; blocked sites never send page text to AI
-- **Keyboard shortcut** — `Ctrl+Shift+K` / `Cmd+Shift+K` to toggle the widget
+</div>
 
 ---
 
-## Quick Start
+## The problem
 
-### 1 — Prerequisites
+Forty open tabs and no memory of why. Browser history tells you where you have
+been — not what you were doing. TabMind closes that gap: every 90 seconds it
+snapshots your open tabs and asks an LLM one question, *"what is this person
+working on?"* — then surfaces the answer, and the tasks hiding inside those
+tabs, right on the page.
 
-- **Node.js 18+** and **npm**
-- A free API key from any of the supported providers (see [Providers](#providers) below)
+## What it does
 
-### 2 — Build
+- **Session awareness** — detects your current focus ("Debugging a React hydration issue"), not just a list of URLs
+- **Floating widget** — a draggable, minimizable glass panel injected on any page: topic, narrative, tasks, notes, and goals
+- **Task manager** — AI-extracted or manual tasks with categories, time estimates, Today / Tomorrow / Someday scheduling, and daily rollover
+- **Tab grouping** — automatically groups related Chrome tabs by topic via `chrome.tabGroups`
+- **Notes** — per-URL notes that survive navigation, plus global quick notes in Work / Personal / Ideas / Learning categories
+- **Goals** — type a goal, get five concrete sub-tasks back from the AI
+- **Dashboard** — full-page session history, week calendar, note folders, and goal progress
+- **Keyboard shortcut** — `Ctrl+Shift+K` / `Cmd+Shift+K` toggles the widget
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A[chrome.alarms<br/>every 90 s] --> B[Background worker<br/>tab snapshot]
+    B --> C[Provider adapter<br/>6 AI providers]
+    C --> D[Session engine<br/>topic · narrative · tasks]
+    D --> E[(chrome.storage.local)]
+    E --> F[Widget · Popup · Dashboard]
+    B --> G[chrome.tabGroups<br/>auto-grouping]
+```
+
+The background worker guards against overlapping snapshots when an AI call runs
+long, and a 429 rate limit triggers a scheduled retry with a plain-English
+explanation instead of a silent failure.
+
+### Providers
+
+Paste one API key — the provider is detected automatically from the key prefix:
+
+**OpenRouter** · **Cerebras** · **Groq / xAI Grok** (one adapter, endpoint
+chosen by key prefix) · **Anthropic Claude** · **Google Gemini** · **OpenAI**
+
+### Privacy model
+
+- All state lives in `chrome.storage.local` — no servers, no accounts
+- The only network traffic is the tab context sent to the AI provider **you** configure
+- **Domain blocklist** — blocklisted sites never contribute page text to AI calls
+- Error monitoring (Sentry) ships **disabled**: the DSN is empty by default, so errors stay in your console
+
+## Testing
+
+**32 Vitest cases** cover the session engine, storage layer, task logic, AI
+response parsing, and background orchestration — plus two live integration
+suites that exercise real provider endpoints.
+
+```bash
+npm test        # runs the extension workspace's Vitest suite
+```
+
+## Quick start
+
+**Prerequisites:** Node.js 18+ and a free API key from any supported provider.
 
 ```bash
 git clone https://github.com/thribhuvan003/tabmind.git
-cd tabmind/extension
+cd tabmind
 npm install
-npm run build
+npm run build:ext
 ```
 
-### 3 — Load in Chrome
+1. Open `chrome://extensions` and enable **Developer mode**
+2. Click **Load unpacked** and select `extension/.output/chrome-mv3`
+3. Click the TabMind icon → **Open settings** → paste your API key
+4. Hit **Save & analyze now** — the widget appears within seconds
 
-1. Open `chrome://extensions`
-2. Enable **Developer mode** (top-right toggle)
-3. Click **Load unpacked**
-4. Select the `extension/.output/chrome-mv3` folder
-
-### 4 — Add your API key
-
-1. Click the TabMind icon in your toolbar
-2. Click **Open settings** (or visit `chrome://extensions` → TabMind → Options)
-3. Paste your API key — the provider is detected automatically from the key prefix
-4. Click **Save & analyze now**
-
-The widget will appear on the current page within a few seconds.
-
----
-
-## Providers
-
-All providers work with the same paste-and-go flow. TabMind detects the provider from the key prefix automatically.
-
-| Provider | Free Tier | Key prefix | Get a key |
-|----------|-----------|------------|-----------|
-| **OpenRouter** ⭐ | Yes — 300+ models | `sk-or-v1-` | [openrouter.ai/keys](https://openrouter.ai/keys) |
-| **Cerebras** ⭐ | Yes — fastest inference | `csk-` | [cloud.cerebras.ai](https://cloud.cerebras.ai/platform/api-keys) |
-| **Gemini** | Yes | `AIzaSy` | [aistudio.google.com](https://aistudio.google.com/apikey) |
-| **Claude** | Yes | `sk-ant-` | [console.anthropic.com](https://console.anthropic.com/settings/keys) |
-| **Grok / Groq** | Groq free tier | `xai-` or `gsk_` | [console.x.ai](https://console.x.ai) / [console.groq.com](https://console.groq.com/keys) |
-| **OpenAI** | Paid | `sk-` | [platform.openai.com](https://platform.openai.com/api-keys) |
-
-> **Recommended for first-time users:** OpenRouter or Cerebras — both have generous free tiers and require no credit card.
-
----
-
-## How it works
-
-```
-Every 90 seconds
-  └─ Background service worker wakes up
-       └─ Queries all open tabs (title + URL + page excerpt)
-            └─ Sends to your AI provider
-                 └─ Gets back: topic · narrative · todos · tab groups
-                      ├─ Saves snapshot to chrome.storage.local
-                      ├─ Groups Chrome tabs by topic
-                      ├─ Merges extracted todos into your task list
-                      └─ Broadcasts update → widget refreshes on every open tab
-```
-
-**What is sent to AI:**
-- Tab titles and URLs (always)
-- A short text excerpt from the page body (unless the domain is on your blocklist)
-
-**What stays local:**
-- All snapshots, notes, tasks, goals — stored in `chrome.storage.local` / `chrome.storage.sync`
-- Your API key — stored in `chrome.storage.sync` (encrypted by Chrome, never leaves your browser to TabMind servers)
-
----
-
-## Widget
-
-The floating widget appears on every page. You can:
-
-| Action | How |
-|--------|-----|
-| **Move** | Drag the header bar |
-| **Minimize** | Click `—` or press `Escape` |
-| **Restore** | Click the purple orb |
-| **Toggle** | `Ctrl+Shift+K` / `Cmd+Shift+K` |
-| **Refresh** | Click `↻` in the header |
-
-Tabs inside the widget:
-
-- **Today** — task list with category filter, week calendar, and quick-add
-- **Notes** — per-page note + global quick notes with category tagging
-- **Goals** — set a goal, AI breaks it into 5 actionable tasks
-- **AI** — current session topic, narrative, tab groups, and continue hint
-
----
-
-## Development
-
-```bash
-# Extension with hot reload
-cd extension
-npm run dev
-
-# Landing page (Next.js)
-cd web
-npm install && npm run dev
-```
-
-### Run tests
-
-```bash
-cd extension
-npm test
-```
-
-20 unit tests covering storage routing, session engine, task scheduling, AI adapter, and background alarms.
-
----
-
-## Project structure
+## Repository structure
 
 ```
 tabmind/
-├── extension/
+├── extension/                 WXT + React 18 Chrome extension (Manifest V3)
 │   ├── entrypoints/
-│   │   ├── background/     # Service worker — alarms, snapshot pipeline, message router
-│   │   ├── content/        # Injects widget into every page, extracts page text
-│   │   ├── popup/          # Toolbar popup — session summary + quick actions
-│   │   ├── options/        # Settings page — API keys, provider, blocklist
-│   │   └── dashboard/      # Full-page dashboard — history, calendar, notes, goals
-│   ├── components/
-│   │   └── widget/         # Draggable floating widget (React + CSS)
+│   │   ├── background/        Alarm-driven snapshot loop, AI calls, tab grouping
+│   │   ├── content/           Floating glass widget injected on every page
+│   │   ├── popup/             Toolbar popup
+│   │   ├── dashboard/         Full-page history, calendar, notes, goals
+│   │   └── options/           Settings and API key management
 │   ├── lib/
-│   │   ├── ai/             # Provider adapters (grok, claude, gemini, openai, openrouter, cerebras)
-│   │   ├── session-engine  # Tab capture + AI analysis pipeline
-│   │   ├── storage.ts      # Chrome storage abstraction
-│   │   ├── tasks.ts        # Task CRUD + rollover logic
-│   │   └── types.ts        # Shared TypeScript types
-│   ├── stores/
-│   │   └── widget.store.ts # Zustand state for the widget
-│   └── __tests__/          # Vitest unit tests
-└── web/                    # Next.js landing page
+│   │   ├── ai/                6 provider adapters + key-prefix auto-detection
+│   │   ├── session-engine.ts  Session inference and narrative building
+│   │   ├── storage.ts         chrome.storage persistence layer
+│   │   ├── tab-groups.ts      chrome.tabGroups topic grouping
+│   │   └── tasks.ts           Task extraction, scheduling, daily rollover
+│   ├── stores/                Zustand widget state
+│   └── __tests__/             32 Vitest cases + live integration suites
+└── web/                       Next.js landing page
 ```
-
----
-
-## Privacy
-
-- **No backend.** TabMind has no server. There is nothing to sign up for.
-- **No analytics.** Zero tracking, zero telemetry by default.
-- **Blocklist.** Banking, email, and calendar domains are blocked by default. Add any domain in Settings → Privacy.
-- **Blocked domains:** page text is never extracted; only tab title and URL are used.
-- **API keys** are stored in Chrome's encrypted sync storage and sent only to your chosen AI provider.
-
----
-
-## Keyboard shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+Shift+K` / `Cmd+Shift+K` | Toggle widget |
-| `Escape` (when widget is open, focus outside inputs) | Minimize widget |
-| `Enter` in task input | Add task |
-| `Enter` in note input | Save note |
-| `Ctrl+Enter` / `Cmd+Enter` in goal input | Break down goal |
-
----
 
 ## Tech stack
 
-- **WXT** — Chrome extension framework (MV3)
-- **React 18** + **Zustand** — widget UI and state
-- **Vitest** — unit testing
-- **TypeScript** — throughout
-- **chrome.storage** — all persistence (local + sync)
+WXT 0.19 · TypeScript · React 18 · Zustand · Tailwind CSS · Vitest · Chrome Manifest V3
 
 ---
 
-## License
+<div align="center">
 
-MIT — use it, fork it, build on it.
+Built by [Thribhuvan](https://github.com/thribhuvan003)
+
+</div>
