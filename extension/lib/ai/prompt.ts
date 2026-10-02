@@ -1,4 +1,5 @@
 import type { AiInputTab } from "./types";
+import { localDateISO } from "../date";
 
 /**
  * Single shared prompt used by every provider.
@@ -13,7 +14,7 @@ export function buildSessionPrompt(tabs: AiInputTab[], sessionMinutes: number): 
     )
     .join("\n\n");
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateISO(new Date());
 
   return `You are TabMind - a silent productivity co-pilot reading the user's browser in real time. You have access to the actual text content of every open tab, not just titles. Read deeply and surface what's really happening.
 

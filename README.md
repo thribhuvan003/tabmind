@@ -11,7 +11,7 @@ it into sessions, tasks, and notes — all stored on your machine.
 [![Manifest V3](https://img.shields.io/badge/Chrome-Manifest_V3-4285f4?style=flat-square&logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev)
-[![Tests](https://img.shields.io/badge/tests-32_Vitest_cases-16a34a?style=flat-square&logo=vitest&logoColor=white)](#testing)
+[![Tests](https://img.shields.io/badge/tests-33_Vitest_cases-16a34a?style=flat-square&logo=vitest&logoColor=white)](#testing)
 
 </div>
 
@@ -68,7 +68,7 @@ chosen by key prefix) · **Anthropic Claude** · **Google Gemini** · **OpenAI**
 
 ## Testing
 
-**32 Vitest cases** cover the session engine, storage layer, task logic, AI
+**33 Vitest cases** cover the session engine, storage layer, task logic, AI
 response parsing, and background orchestration — plus two live integration
 suites that exercise real provider endpoints.
 
@@ -110,7 +110,7 @@ tabmind/
 │   │   ├── tab-groups.ts      chrome.tabGroups topic grouping
 │   │   └── tasks.ts           Task extraction, scheduling, daily rollover
 │   ├── stores/                Zustand widget state
-│   └── __tests__/             32 Vitest cases + live integration suites
+│   └── __tests__/             33 Vitest cases + live integration suites
 └── web/                       Next.js landing page
 ```
 

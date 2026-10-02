@@ -6,6 +6,7 @@ import {
 } from "../../lib/storage";
 import type { SessionSnapshot, GlobalNote, Goal, UserTask } from "../../lib/types";
 import { todayISO, getTasks as getStoredTasks } from "../../lib/tasks";
+import { localDateISO } from "../../lib/date";
 
 const CSS = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -506,7 +507,7 @@ export function Dashboard() {
             </div>
             <div className="db-week-grid">
               {weekDays.map((day, i) => {
-                const iso = day.toISOString().slice(0, 10);
+                const iso = localDateISO(day);
                 const isToday = iso === todayStr;
                 const dayTasks = tasks.filter(t => t.dueDate === iso);
                 return (

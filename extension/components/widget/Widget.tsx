@@ -4,6 +4,7 @@ import { useWidgetStore } from "../../stores/widget.store";
 import type { TabGroup, UserTask, GlobalNote, Goal, TaskCategory, NoteCategory } from "../../lib/types";
 import { ensureFont } from "./theme";
 import { Mark } from "./Mark";
+import { localDateISO } from "../../lib/date";
 import {
   todayISO,
   tomorrowISO,
@@ -543,7 +544,7 @@ function WeekStrip({ tasks }: { tasks: UserTask[] }) {
   return (
     <div className="tm-week-strip">
       {days.map((day, i) => {
-        const iso = day.toISOString().slice(0, 10);
+        const iso = localDateISO(day);
         const isToday = iso === todayStr;
         const dayTasks = tasks.filter(t => t.dueDate === iso);
         const pendingDots = dayTasks.filter(t => t.status === "pending").slice(0, 3);

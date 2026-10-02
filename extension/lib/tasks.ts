@@ -10,18 +10,19 @@
  */
 
 import { storageGet, storageSet } from "./storage";
+import { localDateISO } from "./date";
 import type { UserTask, ExtractedTodo } from "./types";
 
 /* -- date utils -------------------------------------------- */
 
 export function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localDateISO(new Date());
 }
 
 export function tomorrowISO(): string {
   const d = new Date();
   d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
+  return localDateISO(d);
 }
 
 export function nextMondayISO(): string {
@@ -29,7 +30,7 @@ export function nextMondayISO(): string {
   const day = d.getDay(); // 0 = Sun
   const daysUntil = day === 0 ? 1 : 8 - day;
   d.setDate(d.getDate() + daysUntil);
-  return d.toISOString().slice(0, 10);
+  return localDateISO(d);
 }
 
 /** Milliseconds until next local midnight. */

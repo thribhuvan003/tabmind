@@ -25,6 +25,16 @@ beforeEach(() => {
 });
 
 describe("task scheduling", () => {
+  it("uses the local calendar date around midnight", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 4, 18, 0, 15));
+    const { todayISO, tomorrowISO, nextMondayISO } = await import("../lib/tasks");
+
+    expect(todayISO()).toBe("2026-05-18");
+    expect(tomorrowISO()).toBe("2026-05-19");
+    expect(nextMondayISO()).toBe("2026-05-25");
+  });
+
   it("rolls overdue pending tasks into today once", async () => {
     vi.setSystemTime(new Date("2026-05-18T08:00:00Z"));
     const { rolloverOverdueTasks, getTasks } = await import("../lib/tasks");
